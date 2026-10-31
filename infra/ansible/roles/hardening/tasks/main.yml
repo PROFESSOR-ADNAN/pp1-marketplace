@@ -1,0 +1,25 @@
+---
+- name: Ensure UFW is active and default policy is drop
+  ufw:
+    state: enabled
+    policy: deny
+    direction: incoming
+
+- name: Allow HTTP and HTTPS
+  ufw:
+    rule: allow
+    port: "{{ item }}"
+    proto: tcp
+  loop:
+    - 80
+    - 443
+
+- name: Configure sysctl security settings
+  sysctl:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    state: present
+    reload: yes
+  loop:
+    - { name: 'net.ipv4.tcp_syncookies', value: '1' }
+    - { name: 'net.ipv4.conf.all.rp_filter', value: '1' }

@@ -1,0 +1,21 @@
+name: Infrastructure Validation
+
+on:
+  pull_request:
+    paths:
+      - 'infra/**'
+      - 'docker/**'
+      - 'nginx/**'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate Docker Compose Configurations
+        run: |
+          docker compose -f docker/compose.yaml config > /dev/null
+          docker compose -f docker/compose.prod.yaml config > /dev/null

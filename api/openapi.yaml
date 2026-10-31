@@ -1,0 +1,79 @@
+openapi: 3.1.0
+info:
+  title: SOUQ Marketplace API
+  version: 1.0.0
+  description: High-concurrency production-grade multi-vendor marketplace REST API for Ethiopia.
+servers:
+  - url: http://localhost:5000/api/v1
+    description: Local / Staging Environment
+paths:
+  /healthz:
+    get:
+      summary: Healthcheck
+      responses:
+        '200':
+          description: OK
+  /auth/register:
+    post:
+      summary: Register new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, password]
+              properties:
+                name: { type: string }
+                email: { type: string, format: email }
+                password: { type: string, minLength: 8 }
+                role: { type: string, enum: [buyer, seller] }
+      responses:
+        '201':
+          description: User created
+  /auth/login:
+    post:
+      summary: User login
+      responses:
+        '200':
+          description: Authentication tokens
+  /products:
+    get:
+      summary: Browse active products
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, default: 20 }
+        - name: cursor
+          in: query
+          schema: { type: string }
+        - name: category
+          in: query
+          schema: { type: string }
+      responses:
+        '200':
+          description: Paginated product list
+  /orders:
+    post:
+      summary: Checkout order with atomic stock reservation
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: { type: string }
+      responses:
+        '201':
+          description: Order created with Chapa checkout URL
+        '409':
+          description: Out of stock
+  /payments/chapa/webhook:
+    post:
+      summary: Chapa payment webhook
+      parameters:
+        - name: x-chapa-signature
+          in: header
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Webhook acknowledged

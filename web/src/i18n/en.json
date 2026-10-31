@@ -1,0 +1,43 @@
+{
+  "nav": {
+    "home": "Home",
+    "catalog": "Browse Products",
+    "cart": "Cart",
+    "login": "Sign In",
+    "register": "Register",
+    "seller_dashboard": "Seller Hub",
+    "admin_dashboard": "Admin Panel",
+    "logout": "Sign Out",
+    "my_orders": "My Orders"
+  },
+  "hero": {
+    "title": "Ethiopia's Modern Marketplace",
+    "subtitle": "Discover authentic products from verified Ethiopian sellers. Settle safely in ETB with Telebirr, CBE Birr, and cards.",
+    "cta": "Explore Catalog"
+  },
+  "product": {
+    "in_stock": "In Stock",
+    "out_of_stock": "Out of Stock",
+    "add_to_cart": "Add to Cart",
+    "stock_left": "{{count}} left",
+    "price": "ETB {{amount}}"
+  },
+  "cart": {
+    "title": "Your Shopping Cart",
+    "empty": "Your cart is currently empty",
+    "total": "Grand Total",
+    "checkout": "Proceed to Checkout",
+    "remove": "Remove"
+  },
+  "checkout": {
+    "title": "Delivery & Payment",
+    "address_heading": "Ethiopian Delivery Details",
+    "region": "Region",
+    "city": "City",
+    "sub_city": "Sub-City",
+    "woreda": "Woreda (optional)",
+    "landmark": "Notable Landmark (required for driver phone call)",
+    "phone": "Phone Number (+251...)",
+    "pay_chapa": "Pay with Chapa (Telebirr / CBE / Card)"
+  }
+}

@@ -1,0 +1,16 @@
+---
+- name: Install Docker prerequisites
+  apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg
+    state: present
+    update_cache: yes
+
+- name: Enable Docker daemon service
+  systemd:
+    name: docker
+    enabled: yes
+    state: started

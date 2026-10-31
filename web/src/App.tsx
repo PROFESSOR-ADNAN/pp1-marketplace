@@ -1,0 +1,29 @@
+import React from 'react';
+import { Routes, Route } from 'react-router-dom';
+import { Navbar } from './components/layout/Navbar.js';
+import { Footer } from './components/layout/Footer.js';
+import { HomePage } from './pages/HomePage.js';
+import { CartPage } from './pages/CartPage.js';
+import { CheckoutPage } from './pages/CheckoutPage.js';
+import { OrderConfirmationPage } from './pages/OrderConfirmationPage.js';
+import { LoginPage } from './pages/LoginPage.js';
+import { RegisterPage } from './pages/RegisterPage.js';
+
+export const App: React.FC = () => {
+  return (
+    <div className="min-h-screen flex flex-col bg-slate-50">
+      <Navbar />
+      <main className="flex-1">
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/cart" element={<CartPage />} />
+          <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/orders/confirmation" element={<OrderConfirmationPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+        </Routes>
+      </main>
+      <Footer />
+    </div>
+  );
+};

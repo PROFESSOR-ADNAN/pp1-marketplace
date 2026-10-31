@@ -1,0 +1,43 @@
+{
+  "nav": {
+    "home": "ዋና ገጽ",
+    "catalog": "እቃዎችን ያስሱ",
+    "cart": "ጋሪ",
+    "login": "ግባ",
+    "register": "ተመዝገብ",
+    "seller_dashboard": "የሻጭ ገጽ",
+    "admin_dashboard": "የአስተዳዳሪ ገጽ",
+    "logout": "ውጣ",
+    "my_orders": "ትዕዛዞቼ"
+  },
+  "hero": {
+    "title": "የኢትዮጵያ ዘመናዊ የገበያ ቦታ",
+    "subtitle": "ከተረጋገጡ የኢትዮጵያ ሻጮች እውነተኛ እቃዎችን ይግዙ። በቴሌብር፣ በሲቢኢ ብር እና በካርድ በጥንቃቄ ይክፈሉ።",
+    "cta": "እቃዎችን ይመልከቱ"
+  },
+  "product": {
+    "in_stock": "አለ",
+    "out_of_stock": "አልቋል",
+    "add_to_cart": "ወደ ጋሪ ጨምር",
+    "stock_left": "{{count}} ቀርቷል",
+    "price": "ብር {{amount}}"
+  },
+  "cart": {
+    "title": "የእርስዎ ጋሪ",
+    "empty": "ጋሪዎ ውስጥ ምንም እቃ የለም",
+    "total": "ጠቅላላ ድምር",
+    "checkout": "ወደ ክፍያ ይቀጥሉ",
+    "remove": "አስወግድ"
+  },
+  "checkout": {
+    "title": "የማድረሻ አድራሻ እና ክፍያ",
+    "address_heading": "የኢትዮጵያ ማድረሻ ዝርዝር",
+    "region": "ክልል",
+    "city": "ከተማ",
+    "sub_city": "ክፍለ ከተማ",
+    "woreda": "ወረዳ (አስፈላጊ ከሆነ)",
+    "landmark": "መለያ ቦታ (ለአሽከርካሪው ስልክ ጥሪ)",
+    "phone": "ስልክ ቁጥር (+251...)",
+    "pay_chapa": "በቻፓ ይክፈሉ (ቴሌብር / ሲቢኢ / ካርድ)"
+  }
+}

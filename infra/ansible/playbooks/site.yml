@@ -1,0 +1,9 @@
+---
+- name: SOUQ Production Host Provisioning
+  hosts: all
+  become: true
+  roles:
+    - common
+    - hardening
+    - firewall
+    - docker

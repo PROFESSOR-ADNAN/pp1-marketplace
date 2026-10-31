@@ -1,0 +1,15 @@
+{
+  "title": "SOUQ API & System Overview",
+  "panels": [
+    {
+      "title": "Request Rate & Latency (p95)",
+      "type": "timeseries",
+      "targets": [
+        { "expr": "rate(souq_http_request_duration_seconds_count[1m])", "legendFormat": "Req/sec" },
+        { "expr": "histogram_quantile(0.95, sum(rate(souq_http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p95 Latency (s)" }
+      ]
+    }
+  ],
+  "schemaVersion": 38,
+  "version": 1
+}
