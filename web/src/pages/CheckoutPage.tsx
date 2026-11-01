@@ -3,7 +3,7 @@ import { useCart } from '../context/CartContext.js';
 import { apiFetch } from '../services/api.js';
 
 export const CheckoutPage: React.FC = () => {
-  const { items, total } = useCart();
+  const { total } = useCart();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 

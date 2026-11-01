@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShoppingCart, User, Store, ShieldCheck, Globe, LogOut } from 'lucide-react';
+import { ShoppingCart, Store, ShieldCheck, Globe, LogOut } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext.js';
 import { useCart } from '../../context/CartContext.js';
 import { useTranslation } from 'react-i18next';
