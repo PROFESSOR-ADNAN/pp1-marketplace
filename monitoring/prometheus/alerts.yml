@@ -8,7 +8,7 @@ groups:
           severity: critical
         annotations:
           summary: "API 5xx error rate exceeds 0.5% SLO budget"
-          runbook_url: "https://github.com/PROFESSOR-ADNAN/pp1-marketplace/blob/main/docs/runbooks/high-latency.md"
+          runbook_url: "https://github.com/PROFESSOR-ADNAN/souq/blob/main/docs/runbooks/high-latency.md"
 
       - alert: HighLatencyP95
         expr: histogram_quantile(0.95, sum(rate(souq_http_request_duration_seconds_bucket[5m])) by (le)) > 0.3
@@ -17,7 +17,7 @@ groups:
           severity: warning
         annotations:
           summary: "API p95 latency exceeds 300ms target"
-          runbook_url: "https://github.com/PROFESSOR-ADNAN/pp1-marketplace/blob/main/docs/runbooks/high-latency.md"
+          runbook_url: "https://github.com/PROFESSOR-ADNAN/souq/blob/main/docs/runbooks/high-latency.md"
 
       - alert: DatabaseDown
         expr: up{job="souq-api"} == 0
@@ -26,4 +26,4 @@ groups:
           severity: critical
         annotations:
           summary: "API instance down or database unreachable"
-          runbook_url: "https://github.com/PROFESSOR-ADNAN/pp1-marketplace/blob/main/docs/runbooks/database-down.md"
+          runbook_url: "https://github.com/PROFESSOR-ADNAN/souq/blob/main/docs/runbooks/database-down.md"

@@ -1,6 +1,6 @@
 # ሱቅ SOUQ — Ethiopia's Multi-Vendor Marketplace
 
-[![CI Pipeline](https://github.com/PROFESSOR-ADNAN/pp1-marketplace/actions/workflows/ci.yml/badge.svg)](https://github.com/PROFESSOR-ADNAN/pp1-marketplace/actions/workflows/ci.yml)
+[![CI Pipeline](https://github.com/PROFESSOR-ADNAN/souq/actions/workflows/ci.yml/badge.svg)](https://github.com/PROFESSOR-ADNAN/souq/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-emerald.svg)](LICENSE)
 [![Node: 22 LTS](https://img.shields.io/badge/Node-22%20LTS-green.svg)](https://nodejs.org)
 [![TypeScript: Strict](https://img.shields.io/badge/TypeScript-Strict-blue.svg)](packages/shared/tsconfig.json)
@@ -57,8 +57,8 @@ graph TD
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/PROFESSOR-ADNAN/pp1-marketplace.git
-cd pp1-marketplace
+git clone https://github.com/PROFESSOR-ADNAN/souq.git
+cd souq-pp1
 
 # 2. Setup environment variables
 cp .env.example .env
