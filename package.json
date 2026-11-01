@@ -9,12 +9,18 @@
     "web"
   ],
   "scripts": {
-    "build": "npm run build --workspaces --if-present",
+    "build": "npm run build --workspace=@souq/shared && npm run build --workspace=api && npm run build --workspace=web",
+    "build:shared": "npm run build --workspace=@souq/shared",
+    "build:api": "npm run build --workspace=api",
+    "build:web": "npm run build --workspace=web",
     "test": "npm run test --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
     "dev:api": "npm run dev --workspace=api",
     "dev:worker": "npm run dev --workspace=worker",
     "dev:web": "npm run dev --workspace=web"
   },
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "zod": "^4.6.7"
+  }
 }

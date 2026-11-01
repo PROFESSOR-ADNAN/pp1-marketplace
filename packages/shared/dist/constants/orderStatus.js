@@ -1,0 +1,15 @@
+export const ORDER_STATUS = {
+    PENDING_PAYMENT: 'PENDING_PAYMENT',
+    PAID: 'PAID',
+    CONFIRMED_BY_SELLER: 'CONFIRMED_BY_SELLER',
+    SHIPPED: 'SHIPPED',
+    DELIVERED: 'DELIVERED',
+    CANCELLED: 'CANCELLED',
+    EXPIRED: 'EXPIRED',
+    REFUNDED: 'REFUNDED',
+};
+export const PAYMENT_STATUS = {
+    PENDING: 'pending',
+    SUCCESS: 'success',
+    FAILED: 'failed',
+};
