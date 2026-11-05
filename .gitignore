@@ -20,10 +20,10 @@ build/
 *.key
 
 # Persistent data & volumes
-data/
-mongo-data/
-redis-data/
-minio-data/
+/data/
+/mongo-data/
+/redis-data/
+/minio-data/
 
 # Logs
 logs/

@@ -3,8 +3,11 @@ import { Routes, Route } from 'react-router-dom';
 import { Navbar } from './components/layout/Navbar.js';
 import { Footer } from './components/layout/Footer.js';
 import { HomePage } from './pages/HomePage.js';
+import { ProductListingPage } from './pages/ProductListingPage.js';
+import { ProductDetailPage } from './pages/ProductDetailPage.js';
 import { CartPage } from './pages/CartPage.js';
 import { CheckoutPage } from './pages/CheckoutPage.js';
+import { OrderHistoryPage } from './pages/OrderHistoryPage.js';
 import { OrderConfirmationPage } from './pages/OrderConfirmationPage.js';
 import { LoginPage } from './pages/LoginPage.js';
 import { RegisterPage } from './pages/RegisterPage.js';
@@ -16,8 +19,11 @@ export const App: React.FC = () => {
       <main className="flex-1">
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/products" element={<ProductListingPage />} />
+          <Route path="/products/:id" element={<ProductDetailPage />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/orders" element={<OrderHistoryPage />} />
           <Route path="/orders/confirmation" element={<OrderConfirmationPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
