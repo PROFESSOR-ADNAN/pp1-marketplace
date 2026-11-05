@@ -25,3 +25,4 @@
 
 ## Decisions Log
 - See `docs/adr/` for ADRs 0001 through 0011.
+- Authentic Ethiopian Product Showcase & Seed: Fallback and seed catalog enriched with 12 authentic Ethiopian cultural, artisan, and agricultural products (Habesha Kemis, Yirgacheffe Specialty Coffee, Handcrafted Jebena sets, Wollega white honey, etc.) supporting integer santim pricing and Amharic/English bilingual metadata.
