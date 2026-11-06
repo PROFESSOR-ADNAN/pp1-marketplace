@@ -18,7 +18,10 @@ const run = async () => {
     await db.collection('categories').deleteMany({});
     await db.collection('products').deleteMany({});
 
-    const passwordHash = await bcrypt.hash('Password123!', 12);
+    const adminEmail = process.env.ADMIN_EMAIL || 'admin@souq.test';
+    const adminPassword = process.env.ADMIN_PASSWORD || 'admin1234';
+    const adminPasswordHash = await bcrypt.hash(adminPassword, 12);
+    const sellerPasswordHash = await bcrypt.hash('Password123!', 12);
 
     // 1 Admin, 3 Authentic Ethiopian Sellers
     const adminId = new mongoose.Types.ObjectId();
@@ -27,10 +30,10 @@ const run = async () => {
     const seller3Id = new mongoose.Types.ObjectId();
 
     await db.collection('users').insertMany([
-      { _id: adminId, name: 'Dawit Admin', email: 'admin@souq.example.com', password: passwordHash, role: 'admin', totpEnabled: true },
-      { _id: seller1Id, name: 'Tigist Habesha Couture', email: 'tigist@seller.example.com', password: passwordHash, role: 'seller', totpEnabled: false },
-      { _id: seller2Id, name: 'Abebe Specialty Coffee Export', email: 'abebe@seller.example.com', password: passwordHash, role: 'seller', totpEnabled: false },
-      { _id: seller3Id, name: 'Addis Leather Works', email: 'leather@seller.example.com', password: passwordHash, role: 'seller', totpEnabled: false },
+      { _id: adminId, name: 'Dawit Admin', email: adminEmail, password: adminPasswordHash, role: 'admin', totpEnabled: false },
+      { _id: seller1Id, name: 'Tigist Habesha Couture', email: 'tigist@seller.example.com', password: sellerPasswordHash, role: 'seller', totpEnabled: false },
+      { _id: seller2Id, name: 'Abebe Specialty Coffee Export', email: 'abebe@seller.example.com', password: sellerPasswordHash, role: 'seller', totpEnabled: false },
+      { _id: seller3Id, name: 'Addis Leather Works', email: 'leather@seller.example.com', password: sellerPasswordHash, role: 'seller', totpEnabled: false },
     ]);
 
     // 5 Core Categories
