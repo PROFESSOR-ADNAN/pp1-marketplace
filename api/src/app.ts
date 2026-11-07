@@ -16,7 +16,8 @@ import reviewRoutes from './routes/review.routes.js';
 
 const app = express();
 
-app.use(helmet({
+const helmetFn: any = (helmet as any)?.default || helmet;
+app.use(helmetFn({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
