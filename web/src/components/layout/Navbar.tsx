@@ -64,6 +64,13 @@ export const Navbar: React.FC = () => {
 
           {user ? (
             <div className="flex items-center space-x-3">
+              <span className="text-xs font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span className="max-w-[120px] truncate">{user.name}</span>
+                <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-600 bg-emerald-100 px-1.5 py-0.5 rounded">
+                  {user.role}
+                </span>
+              </span>
               <Link to="/orders" className="text-sm font-medium text-slate-700 hover:text-emerald-600 hidden sm:block">
                 {t('nav.my_orders')}
               </Link>

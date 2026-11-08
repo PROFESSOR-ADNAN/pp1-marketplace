@@ -21,15 +21,33 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(() => {
+    try {
+      const saved = localStorage.getItem('souq_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
   const [token, setToken] = useState<string | null>(localStorage.getItem('souq_token'));
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (token) {
       apiFetch('/auth/me')
-        .then((data) => setUser(data))
-        .catch(() => logout())
+        .then((data) => {
+          if (data && data.email) {
+            setUser(data);
+            localStorage.setItem('souq_user', JSON.stringify(data));
+          }
+        })
+        .catch((err: any) => {
+          // Only clear session on verified unauthorized 401 token invalidation
+          const errMsg = err?.message || '';
+          if (errMsg.includes('401') || errMsg.includes('Unauthorized') || errMsg.includes('token')) {
+            logout();
+          }
+        })
         .finally(() => setIsLoading(false));
     } else {
       setIsLoading(false);
@@ -42,8 +60,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       body: JSON.stringify({ email, password: pass }),
     });
     localStorage.setItem('souq_token', data.accessToken);
+    if (data.user) {
+      localStorage.setItem('souq_user', JSON.stringify(data.user));
+      setUser(data.user);
+    }
     setToken(data.accessToken);
-    setUser(data.user);
   };
 
   const register = async (name: string, email: string, pass: string, role: string = 'buyer') => {
@@ -52,12 +73,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       body: JSON.stringify({ name, email, password: pass, role }),
     });
     localStorage.setItem('souq_token', data.accessToken);
+    if (data.user) {
+      localStorage.setItem('souq_user', JSON.stringify(data.user));
+      setUser(data.user);
+    }
     setToken(data.accessToken);
-    setUser(data.user);
   };
 
   const logout = () => {
     localStorage.removeItem('souq_token');
+    localStorage.removeItem('souq_user');
     setToken(null);
     setUser(null);
   };
