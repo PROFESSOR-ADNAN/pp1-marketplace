@@ -60,6 +60,7 @@ app.use((req, res, next) => {
   next();
 });
 
+app.get('/', (_req, res) => res.json({ status: 'ok', name: 'SOUQ API', version: '0.1.0' }));
 app.get('/healthz', (req, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
 app.get('/metrics', async (req, res) => {
   res.setHeader('Content-Type', client.register.contentType);
