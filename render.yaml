@@ -3,7 +3,7 @@ services:
     name: souq-api
     runtime: node
     plan: free
-    buildCommand: npm install && npm run build:shared && npm run build:api && npm run build:worker
+    buildCommand: npm install --include=dev && npm run build:shared && npm run build:api && npm run build:worker
     startCommand: npm run start:render
     healthCheckPath: /healthz
     envVars:
