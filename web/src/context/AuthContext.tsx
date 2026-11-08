@@ -36,13 +36,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (token) {
       apiFetch('/auth/me')
         .then((data) => {
-          if (data && data.email) {
-            setUser(data);
-            localStorage.setItem('souq_user', JSON.stringify(data));
+          if (data) {
+            const userObj: User = data.user || {
+              id: data.id || data._id,
+              name: data.name || data.displayName || data.username || 'User',
+              email: data.email,
+              role: data.role || 'buyer',
+              totpEnabled: Boolean(data.totpEnabled),
+            };
+            if (userObj.email || userObj.name) {
+              setUser(userObj);
+              localStorage.setItem('souq_user', JSON.stringify(userObj));
+            }
           }
         })
         .catch((err: any) => {
-          // Only clear session on verified unauthorized 401 token invalidation
           const errMsg = err?.message || '';
           if (errMsg.includes('401') || errMsg.includes('Unauthorized') || errMsg.includes('token')) {
             logout();
@@ -59,12 +67,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       method: 'POST',
       body: JSON.stringify({ email, password: pass }),
     });
-    localStorage.setItem('souq_token', data.accessToken);
-    if (data.user) {
-      localStorage.setItem('souq_user', JSON.stringify(data.user));
-      setUser(data.user);
+
+    const accessToken = data.accessToken || data.token;
+    const userObj: User = data.user || {
+      id: data._id || data.id,
+      name: data.name || data.displayName || data.username || email.split('@')[0],
+      email: data.email || email,
+      role: data.role || 'buyer',
+      totpEnabled: Boolean(data.totpEnabled),
+    };
+
+    if (accessToken) {
+      localStorage.setItem('souq_token', accessToken);
+      setToken(accessToken);
     }
-    setToken(data.accessToken);
+    if (userObj) {
+      localStorage.setItem('souq_user', JSON.stringify(userObj));
+      setUser(userObj);
+    }
   };
 
   const register = async (name: string, email: string, pass: string, role: string = 'buyer') => {
@@ -72,12 +92,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       method: 'POST',
       body: JSON.stringify({ name, email, password: pass, role }),
     });
-    localStorage.setItem('souq_token', data.accessToken);
-    if (data.user) {
-      localStorage.setItem('souq_user', JSON.stringify(data.user));
-      setUser(data.user);
+
+    const accessToken = data.accessToken || data.token;
+    const userObj: User = data.user || {
+      id: data._id || data.id,
+      name: data.name || data.displayName || name,
+      email: data.email || email,
+      role: data.role || (role as any),
+      totpEnabled: Boolean(data.totpEnabled),
+    };
+
+    if (accessToken) {
+      localStorage.setItem('souq_token', accessToken);
+      setToken(accessToken);
     }
-    setToken(data.accessToken);
+    if (userObj) {
+      localStorage.setItem('souq_user', JSON.stringify(userObj));
+      setUser(userObj);
+    }
   };
 
   const logout = () => {
