@@ -58,7 +58,7 @@ graph TD
 ```bash
 # 1. Clone the repository
 git clone https://github.com/PROFESSOR-ADNAN/souq.git
-cd souq-pp1
+cd Souq-pp1
 
 # 2. Setup environment variables
 cp .env.example .env
