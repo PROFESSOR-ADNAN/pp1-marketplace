@@ -88,10 +88,25 @@ export const checkoutOrder = async (req: AuthRequest, res: Response, next: NextF
       orderResult = order;
     });
 
-    const clientOrigin = req.body.returnUrl 
-      || req.headers.origin 
-      || (req.headers.referer ? new URL(req.headers.referer).origin : '') 
-      || config.clientUrl;
+    // Ensure clean return URL without duplicated paths
+    let targetReturnUrl: string;
+    if (req.body.returnUrl && typeof req.body.returnUrl === 'string') {
+      try {
+        const parsed = new URL(req.body.returnUrl);
+        if (parsed.pathname.includes('/confirmation')) {
+          targetReturnUrl = `${parsed.origin}${parsed.pathname}`;
+        } else {
+          targetReturnUrl = `${parsed.origin}/orders/confirmation`;
+        }
+      } catch {
+        targetReturnUrl = `${config.clientUrl}/orders/confirmation`;
+      }
+    } else {
+      const clientOrigin = req.headers.origin 
+        || (req.headers.referer ? new URL(req.headers.referer).origin : '') 
+        || config.clientUrl;
+      targetReturnUrl = `${clientOrigin.replace(/\/$/, '')}/orders/confirmation`;
+    }
 
     const host = req.get('host');
     const proto = req.get('x-forwarded-proto') || (req.secure ? 'https' : 'http');
@@ -104,7 +119,7 @@ export const checkoutOrder = async (req: AuthRequest, res: Response, next: NextF
       firstName,
       lastName: rest.join(' ') || firstName,
       txRef: orderResult.payment.txRef,
-      returnUrl: `${clientOrigin.replace(/\/$/, '')}/orders/confirmation`,
+      returnUrl: targetReturnUrl,
       callbackUrl: `${currentApiBase.replace(/\/$/, '')}/api/v1/payments/chapa/webhook`,
     });
 
@@ -118,42 +133,56 @@ export const checkoutOrder = async (req: AuthRequest, res: Response, next: NextF
 
 export const reconcilePayment = async (txRef: string): Promise<any> => {
   const order = await Order.findOne({ 'payment.txRef': txRef });
-  if (!order || order.payment.status !== PAYMENT_STATUS.PENDING) return order;
+  if (!order) return null;
+
+  // If already confirmed as success or paid, return immediately
+  if (order.payment.status === PAYMENT_STATUS.SUCCESS || order.status === ORDER_STATUS.PAID) {
+    return order;
+  }
 
   const verification = await verifyChapaTransaction(txRef);
-  const status = verification?.data?.status;
+  const rawStatus = verification?.data?.status || verification?.status;
+  const status = typeof rawStatus === 'string' ? rawStatus.toLowerCase() : '';
 
   if (status === 'success') {
-    await transitionOrder(order._id as mongoose.Types.ObjectId, ORDER_STATUS.PAID, {
-      id: order.buyer.toString(),
-      role: 'system',
-    });
+    if (order.status === ORDER_STATUS.PENDING_PAYMENT) {
+      await transitionOrder(order._id as mongoose.Types.ObjectId, ORDER_STATUS.PAID, {
+        id: order.buyer.toString(),
+        role: 'system',
+      });
+    }
 
     order.payment.status = PAYMENT_STATUS.SUCCESS;
-    order.payment.chapaRef = verification.data.ref_id || verification.data.reference;
+    order.payment.chapaRef = verification?.data?.ref_id || verification?.data?.reference || verification?.reference || '';
     order.payment.verifiedAt = new Date();
     await order.save();
 
-    // Generate payout ledger records for sellers (5% platform fee)
-    for (const item of order.items) {
-      const gross = item.price * item.quantity;
-      const commission = Math.round(gross * 0.05);
-      const net = gross - commission;
+    // Check if payout ledger already created for this order to prevent duplicates
+    const existingPayout = await PayoutLedger.findOne({ order: order._id });
+    if (!existingPayout) {
+      // Generate payout ledger records for sellers (5% platform fee)
+      for (const item of order.items) {
+        const gross = item.price * item.quantity;
+        const commission = Math.round(gross * 0.05);
+        const net = gross - commission;
 
-      await PayoutLedger.create({
-        seller: item.seller,
-        order: order._id,
-        grossAmount: gross,
-        commissionAmount: commission,
-        netAmount: net,
-        status: 'pending',
-      });
+        await PayoutLedger.create({
+          seller: item.seller,
+          order: order._id,
+          grossAmount: gross,
+          commissionAmount: commission,
+          netAmount: net,
+          status: 'pending',
+        });
+      }
     }
   } else if (status === 'failed') {
-    await transitionOrder(order._id as mongoose.Types.ObjectId, ORDER_STATUS.CANCELLED, {
-      id: order.buyer.toString(),
-      role: 'system',
-    });
+    if (order.status === ORDER_STATUS.PENDING_PAYMENT) {
+      await transitionOrder(order._id as mongoose.Types.ObjectId, ORDER_STATUS.CANCELLED, {
+        id: order.buyer.toString(),
+        role: 'system',
+      });
+    }
     order.payment.status = PAYMENT_STATUS.FAILED;
     order.payment.verifiedAt = new Date();
     await order.save();
@@ -218,6 +247,8 @@ export const getOrderConfirmationStatus = async (req: any, res: Response, next: 
       txRef: reconciled.payment?.txRef,
       totalAmount: reconciled.totalAmount,
       itemsCount: reconciled.items?.length || 0,
+      deliveryAddress: reconciled.deliveryAddress,
+      createdAt: reconciled.createdAt,
       verifiedAt: reconciled.payment?.verifiedAt,
     });
   } catch (err) {

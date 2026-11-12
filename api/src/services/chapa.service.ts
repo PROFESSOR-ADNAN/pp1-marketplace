@@ -12,9 +12,12 @@ export const initializeChapaTransaction = async (params: {
   returnUrl?: string;
   callbackUrl?: string;
 }): Promise<string> => {
-  const returnBase = params.returnUrl || `${config.clientUrl}/orders/confirmation`;
-  const sep = returnBase.includes('?') ? '&' : '?';
-  const fullReturnUrl = `${returnBase}${sep}tx_ref=${params.txRef}`;
+  const returnBase = (params.returnUrl || `${config.clientUrl}/orders/confirmation`).replace(/\/+$/, '');
+  let fullReturnUrl = returnBase;
+  if (!fullReturnUrl.includes('tx_ref=') && !fullReturnUrl.includes('trx_ref=')) {
+    const sep = returnBase.includes('?') ? '&' : '?';
+    fullReturnUrl = `${returnBase}${sep}tx_ref=${params.txRef}`;
+  }
   const fullCallbackUrl = params.callbackUrl || `${config.apiBaseUrl}/api/v1/payments/chapa/webhook`;
 
   // If in mock/offline mode without a valid test key, return simulated checkout
