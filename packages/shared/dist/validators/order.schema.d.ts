@@ -26,6 +26,7 @@ export declare const checkoutSchema: z.ZodEffects<z.ZodObject<{
         woreda?: string | undefined;
         isDefault?: boolean | undefined;
     }>>;
+    returnUrl: z.ZodOptional<z.ZodString>;
 }, "strip", z.ZodTypeAny, {
     addressId?: string | undefined;
     deliveryAddress?: {
@@ -37,6 +38,7 @@ export declare const checkoutSchema: z.ZodEffects<z.ZodObject<{
         isDefault: boolean;
         woreda?: string | undefined;
     } | undefined;
+    returnUrl?: string | undefined;
 }, {
     addressId?: string | undefined;
     deliveryAddress?: {
@@ -48,6 +50,7 @@ export declare const checkoutSchema: z.ZodEffects<z.ZodObject<{
         woreda?: string | undefined;
         isDefault?: boolean | undefined;
     } | undefined;
+    returnUrl?: string | undefined;
 }>, {
     addressId?: string | undefined;
     deliveryAddress?: {
@@ -59,6 +62,7 @@ export declare const checkoutSchema: z.ZodEffects<z.ZodObject<{
         isDefault: boolean;
         woreda?: string | undefined;
     } | undefined;
+    returnUrl?: string | undefined;
 }, {
     addressId?: string | undefined;
     deliveryAddress?: {
@@ -70,5 +74,6 @@ export declare const checkoutSchema: z.ZodEffects<z.ZodObject<{
         woreda?: string | undefined;
         isDefault?: boolean | undefined;
     } | undefined;
+    returnUrl?: string | undefined;
 }>;
 export type CheckoutInput = z.infer<typeof checkoutSchema>;

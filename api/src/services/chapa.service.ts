@@ -9,10 +9,17 @@ export const initializeChapaTransaction = async (params: {
   firstName: string;
   lastName: string;
   txRef: string;
+  returnUrl?: string;
+  callbackUrl?: string;
 }): Promise<string> => {
+  const returnBase = params.returnUrl || `${config.clientUrl}/orders/confirmation`;
+  const sep = returnBase.includes('?') ? '&' : '?';
+  const fullReturnUrl = `${returnBase}${sep}tx_ref=${params.txRef}`;
+  const fullCallbackUrl = params.callbackUrl || `${config.apiBaseUrl}/api/v1/payments/chapa/webhook`;
+
   // If in mock/offline mode without a valid test key, return simulated checkout
   if (config.chapa.secretKey.includes('mock') || !config.chapa.secretKey.startsWith('CHASECK')) {
-    return `${config.clientUrl}/orders/confirmation?tx_ref=${params.txRef}&mock=true`;
+    return `${fullReturnUrl}&mock=true`;
   }
 
   const amountETB = (params.amount / 100).toFixed(2);
@@ -29,8 +36,8 @@ export const initializeChapaTransaction = async (params: {
       first_name: params.firstName,
       last_name: params.lastName,
       tx_ref: params.txRef,
-      callback_url: `${config.apiBaseUrl}/api/v1/payments/chapa/callback`,
-      return_url: `${config.clientUrl}/orders/confirmation?tx_ref=${params.txRef}`,
+      callback_url: fullCallbackUrl,
+      return_url: fullReturnUrl,
     }),
   });
 
@@ -58,11 +65,25 @@ export const verifyChapaTransaction = async (txRef: string): Promise<any> => {
 };
 
 export const verifyChapaSignature = (rawBody: string | Buffer, signatureHeader?: string): boolean => {
-  if (!signatureHeader) return false;
-  const expected = crypto
-    .createHmac('sha256', config.chapa.webhookSecret)
-    .update(typeof rawBody === 'string' ? rawBody : rawBody.toString('utf8'))
-    .digest('hex');
+  if (!signatureHeader || !config.chapa.webhookSecret) return false;
 
-  return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signatureHeader));
+  try {
+    const bodyStr = typeof rawBody === 'string' ? rawBody : rawBody.toString('utf8');
+    const expected = crypto
+      .createHmac('sha256', config.chapa.webhookSecret)
+      .update(bodyStr)
+      .digest('hex');
+
+    const expectedBuf = Buffer.from(expected, 'utf8');
+    const signatureBuf = Buffer.from(signatureHeader, 'utf8');
+
+    if (expectedBuf.length !== signatureBuf.length) {
+      return false;
+    }
+
+    return crypto.timingSafeEqual(expectedBuf, signatureBuf);
+  } catch (err) {
+    console.error('[Chapa] Webhook signature verification error:', err);
+    return false;
+  }
 };

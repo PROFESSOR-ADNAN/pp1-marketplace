@@ -6,8 +6,10 @@ export const config = {
   port: parseInt(process.env.PORT || '5000', 10),
   mongoUri: process.env.MONGO_URI || 'mongodb://localhost:27017/souq_marketplace?replicaSet=rs0',
   redisUri: process.env.REDIS_URI || 'redis://localhost:6379',
-  apiBaseUrl: process.env.API_BASE_URL || 'http://localhost:5000',
-  clientUrl: process.env.CLIENT_URL || 'http://localhost:5173',
+  apiBaseUrl: process.env.API_BASE_URL 
+    || (process.env.NODE_ENV === 'production' ? 'https://souq-api-xxdp.onrender.com' : 'http://localhost:5000'),
+  clientUrl: process.env.CLIENT_URL 
+    || (process.env.NODE_ENV === 'production' ? 'https://souq-web.vercel.app' : 'http://localhost:5173'),
   jwt: {
     accessSecret: process.env.JWT_ACCESS_SECRET || 'dev_jwt_access_secret_minimum_32_chars_ok',
     refreshSecret: process.env.JWT_REFRESH_SECRET || 'dev_jwt_refresh_secret_minimum_32_chars_ok',

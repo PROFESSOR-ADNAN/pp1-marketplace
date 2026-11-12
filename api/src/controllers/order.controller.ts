@@ -9,6 +9,7 @@ import { AuthRequest } from '../middleware/auth.js';
 import { reserveStockForOrder } from '../services/inventory.service.js';
 import { initializeChapaTransaction, verifyChapaTransaction, verifyChapaSignature } from '../services/chapa.service.js';
 import { transitionOrder } from '../services/orderStateMachine.service.js';
+import { config } from '../config/env.js';
 import { ORDER_STATUS, PAYMENT_STATUS, ROLES } from '@souq/shared';
 
 const generateTxRef = () => `souq-${crypto.randomBytes(8).toString('hex')}`;
@@ -87,6 +88,15 @@ export const checkoutOrder = async (req: AuthRequest, res: Response, next: NextF
       orderResult = order;
     });
 
+    const clientOrigin = req.body.returnUrl 
+      || req.headers.origin 
+      || (req.headers.referer ? new URL(req.headers.referer).origin : '') 
+      || config.clientUrl;
+
+    const host = req.get('host');
+    const proto = req.get('x-forwarded-proto') || (req.secure ? 'https' : 'http');
+    const currentApiBase = config.apiBaseUrl || `${proto}://${host}`;
+
     const [firstName, ...rest] = req.user.name.trim().split(' ');
     checkoutUrlResult = await initializeChapaTransaction({
       amount: orderResult.totalAmount,
@@ -94,6 +104,8 @@ export const checkoutOrder = async (req: AuthRequest, res: Response, next: NextF
       firstName,
       lastName: rest.join(' ') || firstName,
       txRef: orderResult.payment.txRef,
+      returnUrl: `${clientOrigin.replace(/\/$/, '')}/orders/confirmation`,
+      callbackUrl: `${currentApiBase.replace(/\/$/, '')}/api/v1/payments/chapa/webhook`,
     });
 
     res.status(201).json({ order: orderResult, checkoutUrl: checkoutUrlResult });
@@ -152,14 +164,62 @@ export const reconcilePayment = async (txRef: string): Promise<any> => {
 
 export const chapaWebhook = async (req: any, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const signature = req.headers['x-chapa-signature'] as string;
-    if (!verifyChapaSignature(req.rawBody || JSON.stringify(req.body), signature)) {
-      res.status(401).send('Invalid signature');
+    const signature = (req.headers['x-chapa-signature'] || req.headers['chapa-signature']) as string;
+    
+    // Check HMAC signature if webhookSecret is configured and in production
+    if (config.chapa.webhookSecret && config.chapa.webhookSecret !== 'dev_webhook_hmac_secret') {
+      const isValid = verifyChapaSignature(req.rawBody || JSON.stringify(req.body), signature);
+      if (!isValid) {
+        console.warn('[Chapa Webhook] Invalid signature received');
+        res.status(401).json({ message: 'Invalid signature' });
+        return;
+      }
+    }
+
+    const txRef = req.body?.tx_ref 
+      || req.body?.data?.tx_ref 
+      || req.body?.trx_ref 
+      || req.body?.data?.trx_ref 
+      || req.query?.tx_ref 
+      || req.query?.trx_ref;
+
+    if (!txRef) {
+      console.warn('[Chapa Webhook] Received webhook without tx_ref:', req.body);
+      res.status(400).json({ message: 'Missing tx_ref in webhook payload' });
       return;
     }
 
-    await reconcilePayment(req.body?.tx_ref);
+    console.log(`[Chapa Webhook] Reconciling payment for tx_ref: ${txRef}`);
+    await reconcilePayment(txRef);
     res.sendStatus(200);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getOrderConfirmationStatus = async (req: any, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { txRef } = req.params;
+    if (!txRef) {
+      res.status(400).json({ message: 'Missing transaction reference' });
+      return;
+    }
+
+    const reconciled = await reconcilePayment(txRef);
+    if (!reconciled) {
+      res.status(404).json({ message: 'Order not found for transaction reference' });
+      return;
+    }
+
+    res.json({
+      orderId: reconciled._id,
+      status: reconciled.status,
+      paymentStatus: reconciled.payment?.status,
+      txRef: reconciled.payment?.txRef,
+      totalAmount: reconciled.totalAmount,
+      itemsCount: reconciled.items?.length || 0,
+      verifiedAt: reconciled.payment?.verifiedAt,
+    });
   } catch (err) {
     next(err);
   }

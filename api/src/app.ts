@@ -47,6 +47,12 @@ app.use(express.json({
     req.rawBody = buf;
   },
 }));
+app.use(express.urlencoded({
+  extended: true,
+  verify: (req: any, _res, buf) => {
+    if (!req.rawBody) req.rawBody = buf;
+  },
+}));
 app.use(cookieParser());
 app.use(globalLimiter);
 

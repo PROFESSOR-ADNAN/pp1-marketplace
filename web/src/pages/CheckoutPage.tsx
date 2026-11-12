@@ -29,6 +29,7 @@ export const CheckoutPage: React.FC = () => {
         },
         body: JSON.stringify({
           deliveryAddress: form,
+          returnUrl: `${window.location.origin}/orders/confirmation`,
         }),
       });
 

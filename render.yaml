@@ -11,6 +11,10 @@ services:
         value: production
       - key: PORT
         value: 10000
+      - key: API_BASE_URL
+        value: https://souq-api-xxdp.onrender.com
+      - key: CLIENT_URL
+        value: https://souq-web.vercel.app
       - key: MONGO_URI
         sync: false
       - key: REDIS_URI
