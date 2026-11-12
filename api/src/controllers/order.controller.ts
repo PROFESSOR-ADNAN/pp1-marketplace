@@ -11,6 +11,8 @@ import { initializeChapaTransaction, verifyChapaTransaction, verifyChapaSignatur
 import { transitionOrder } from '../services/orderStateMachine.service.js';
 import { config } from '../config/env.js';
 import { ORDER_STATUS, PAYMENT_STATUS, ROLES } from '@souq/shared';
+import { sendOrderPaymentSms, sendOrderShippedSms } from '../services/sms.service.js';
+import { sendOrderReceiptEmail, sendOrderShippedEmail } from '../services/email.service.js';
 
 const generateTxRef = () => `souq-${crypto.randomBytes(8).toString('hex')}`;
 
@@ -176,6 +178,37 @@ export const reconcilePayment = async (txRef: string): Promise<any> => {
         });
       }
     }
+
+    // Asynchronously dispatch notifications (AfroMessage SMS & Gmail Email)
+    (async () => {
+      try {
+        const populatedOrder = await Order.findById(order._id).populate('buyer', 'name email');
+        const buyer = populatedOrder?.buyer as any;
+        const buyerPhone = order.deliveryAddress?.phone;
+        const buyerEmail = buyer?.email;
+        const buyerName = buyer?.name || 'Customer';
+
+        // 1. Send SMS to buyer via AfroMessage
+        if (buyerPhone) {
+          sendOrderPaymentSms(buyerPhone, order.payment.txRef, order.totalAmount, order.deliveryAddress?.city)
+            .catch((e) => console.error('[Order SMS Error]:', e.message));
+        }
+
+        // 2. Send order receipt email via Gmail
+        if (buyerEmail) {
+          sendOrderReceiptEmail({
+            to: buyerEmail,
+            buyerName,
+            txRef: order.payment.txRef,
+            totalAmountSantim: order.totalAmount,
+            items: order.items.map((i: any) => ({ name: i.name, quantity: i.quantity, price: i.price })),
+            deliveryAddress: order.deliveryAddress,
+          }).catch((e) => console.error('[Order Email Error]:', e.message));
+        }
+      } catch (notifErr: any) {
+        console.error('[Notification Dispatch Error]:', notifErr.message);
+      }
+    })();
   } else if (status === 'failed') {
     if (order.status === ORDER_STATUS.PENDING_PAYMENT) {
       await transitionOrder(order._id as mongoose.Types.ObjectId, ORDER_STATUS.CANCELLED, {
@@ -315,6 +348,30 @@ export const updateOrderStatus = async (req: AuthRequest, res: Response, next: N
       id: req.user._id.toString(),
       role: req.user.role,
     });
+
+    if (status === ORDER_STATUS.SHIPPED) {
+      (async () => {
+        try {
+          const populated = await Order.findById(req.params.id).populate('buyer', 'name email');
+          const buyer = populated?.buyer as any;
+          if (updated.deliveryAddress?.phone) {
+            sendOrderShippedSms(updated.deliveryAddress.phone, updated.payment.txRef, req.user.name)
+              .catch((e) => console.error('[Order Shipped SMS Error]:', e.message));
+          }
+          if (buyer?.email) {
+            sendOrderShippedEmail({
+              to: buyer.email,
+              buyerName: buyer.name || 'Valued Customer',
+              txRef: updated.payment.txRef,
+              carrierOrSeller: req.user.name,
+            }).catch((e) => console.error('[Order Shipped Email Error]:', e.message));
+          }
+        } catch (e: any) {
+          console.error('[Order Shipped Notification Error]:', e.message);
+        }
+      })();
+    }
+
     res.json(updated);
   } catch (err) {
     next(err);

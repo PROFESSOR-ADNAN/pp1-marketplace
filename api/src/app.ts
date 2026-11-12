@@ -13,6 +13,7 @@ import categoryRoutes from './routes/category.routes.js';
 import sellerRoutes from './routes/seller.routes.js';
 import adminRoutes from './routes/admin.routes.js';
 import reviewRoutes from './routes/review.routes.js';
+import notificationRoutes from './routes/notification.routes.js';
 
 const app = express();
 
@@ -83,6 +84,7 @@ app.use('/api/v1/categories', categoryRoutes);
 app.use('/api/v1/sellers', sellerRoutes);
 app.use('/api/v1/admin', adminRoutes);
 app.use('/api/v1/reviews', reviewRoutes);
+app.use('/api/v1/notifications', notificationRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

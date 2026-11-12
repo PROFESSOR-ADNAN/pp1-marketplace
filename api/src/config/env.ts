@@ -30,6 +30,17 @@ export const config = {
     secretKey: process.env.S3_SECRET_KEY || 'souq_dev_secret_key_12345',
     publicUrl: process.env.S3_PUBLIC_URL || 'http://localhost:9000/souq-media',
   },
+  afromessage: {
+    token: process.env.AFROMESSAGE_API_TOKEN || '',
+    sender: process.env.AFROMESSAGE_SENDER_NAME || 'SOUQ',
+    identifierId: process.env.AFROMESSAGE_IDENTIFIER_ID || '',
+  },
+  email: {
+    service: process.env.EMAIL_SERVICE || 'gmail',
+    user: process.env.GMAIL_USER || process.env.SMTP_USER || '',
+    pass: process.env.GMAIL_APP_PASSWORD || process.env.SMTP_PASS || '',
+    from: process.env.EMAIL_FROM || process.env.GMAIL_USER || 'SOUQ Marketplace <no-reply@souq.com>',
+  },
   smtp: {
     host: process.env.SMTP_HOST || 'localhost',
     port: parseInt(process.env.SMTP_PORT || '1025', 10),

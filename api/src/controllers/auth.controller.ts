@@ -10,6 +10,7 @@ import {
   deleteUserAccount,
 } from '../services/auth.service.js';
 import { AuthRequest } from '../middleware/auth.js';
+import { sendWelcomeEmail } from '../services/email.service.js';
 
 const setRefreshCookie = (res: Response, token: string) => {
   res.cookie('refreshToken', token, {
@@ -25,6 +26,14 @@ export const register = async (req: Request, res: Response, next: NextFunction):
   try {
     const { user, tokens } = await registerUser(req.body);
     setRefreshCookie(res, tokens.refreshToken);
+
+    // Asynchronously send welcome email
+    sendWelcomeEmail({
+      to: user.email,
+      name: user.name,
+      role: user.role,
+    }).catch((e) => console.error('[Welcome Email Error]:', e.message));
+
     res.status(201).json({
       user: { id: user._id, name: user.name, email: user.email, role: user.role, totpEnabled: user.totpEnabled },
       accessToken: tokens.accessToken,

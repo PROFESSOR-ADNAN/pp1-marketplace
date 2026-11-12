@@ -39,3 +39,15 @@ services:
         value: admin@souq.test
       - key: ADMIN_PASSWORD
         value: admin1234
+      - key: AFROMESSAGE_API_TOKEN
+        sync: false
+      - key: AFROMESSAGE_SENDER_NAME
+        value: SOUQ
+      - key: AFROMESSAGE_IDENTIFIER_ID
+        sync: false
+      - key: GMAIL_USER
+        sync: false
+      - key: GMAIL_APP_PASSWORD
+        sync: false
+      - key: EMAIL_FROM
+        value: "SOUQ Marketplace <no-reply@souq.com>"
