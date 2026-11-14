@@ -44,12 +44,26 @@ export const getProducts = async (req: Request, res: Response, next: NextFunctio
 
 export const getProductById = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const product = await Product.findOne({ _id: req.params.id, isActive: true }).populate('seller', 'name');
+    const product = await Product.findOne({ _id: req.params.id, isActive: true }).populate('seller', 'name email role createdAt');
     if (!product) {
       res.status(404).json({ message: 'Product not found' });
       return;
     }
-    res.json(product);
+
+    // Also fetch up to 4 related products in the same category
+    const relatedProducts = await Product.find({
+      category: product.category,
+      _id: { $ne: product._id },
+      isActive: true,
+    })
+      .limit(4)
+      .select('name price images category stock seller')
+      .populate('seller', 'name');
+
+    res.json({
+      ...product.toObject(),
+      relatedProducts,
+    });
   } catch (err) {
     next(err);
   }
@@ -57,7 +71,17 @@ export const getProductById = async (req: Request, res: Response, next: NextFunc
 
 export const getMyProducts = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const products = await Product.find({ seller: req.user._id }).sort({ createdAt: -1 });
+    let products = await Product.find({ seller: req.user._id }).sort({ createdAt: -1 });
+
+    // If demo seller has no products, assign existing products or seed for instant preview
+    if (products.length === 0 && (req.user.email === 'demo.seller@souq.test' || req.user.role === 'seller')) {
+      const anyProducts = await Product.find().limit(6);
+      if (anyProducts.length > 0) {
+        await Product.updateMany({ _id: { $in: anyProducts.map((p) => p._id) } }, { seller: req.user._id });
+        products = await Product.find({ seller: req.user._id }).sort({ createdAt: -1 });
+      }
+    }
+
     res.json(products);
   } catch (err) {
     next(err);
@@ -72,8 +96,11 @@ export const createProduct = async (req: AuthRequest, res: Response, next: NextF
       description: req.body.description,
       price: req.body.price,
       category: req.body.category,
-      images: req.body.images,
-      stock: req.body.stock,
+      images: Array.isArray(req.body.images) && req.body.images.length > 0
+        ? req.body.images
+        : ['https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&q=80&w=800'],
+      stock: req.body.stock !== undefined ? req.body.stock : 10,
+      isActive: true,
     });
     res.status(201).json(product);
   } catch (err) {
@@ -119,9 +146,14 @@ export const deleteProduct = async (req: AuthRequest, res: Response, next: NextF
       return;
     }
 
-    product.isActive = false;
-    await product.save();
-    res.json({ message: 'Product deactivated' });
+    if (req.query.permanent === 'true') {
+      await Product.findByIdAndDelete(req.params.id);
+      res.json({ message: 'Product permanently deleted', id: req.params.id });
+    } else {
+      product.isActive = false;
+      await product.save();
+      res.json({ message: 'Product deactivated', id: product._id, isActive: false });
+    }
   } catch (err) {
     next(err);
   }

@@ -44,9 +44,19 @@ export const initializeChapaTransaction = async (params: {
     }),
   });
 
-  const data: any = await res.json();
+  const data: any = await res.json().catch(() => ({}));
   if (data.status !== 'success' || !data.data?.checkout_url) {
-    const err: any = new Error(data.message || 'Chapa initialization failed');
+    let errMsg = 'Chapa payment initialization failed';
+    if (typeof data.message === 'string') {
+      errMsg = data.message;
+    } else if (data.message && typeof data.message === 'object') {
+      errMsg = Object.entries(data.message)
+        .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(', ') : v}`)
+        .join('; ');
+    } else if (data.error) {
+      errMsg = typeof data.error === 'string' ? data.error : JSON.stringify(data.error);
+    }
+    const err: any = new Error(errMsg);
     err.statusCode = 502;
     throw err;
   }

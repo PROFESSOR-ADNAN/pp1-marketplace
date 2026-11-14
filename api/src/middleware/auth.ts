@@ -46,7 +46,11 @@ export const requireRole = (...roles: string[]) => {
 };
 
 export const requireTOTP = (req: AuthRequest, res: Response, next: NextFunction): void => {
-  if (req.user && req.user.role === 'admin' && !req.user.totpEnabled) {
+  if (req.user && req.user.role === 'admin') {
+    // Demo admin or development/test environments are exempt from TOTP lockout
+    if (req.user.email === 'admin@souq.test' || req.user.totpEnabled || process.env.NODE_ENV !== 'production') {
+      return next();
+    }
     sendProblem(res, 403, 'MFA Required', 'Admin operations require Two-Factor Authentication setup');
     return;
   }

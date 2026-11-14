@@ -5,7 +5,7 @@ export declare const addressSchema: z.ZodObject<{
     subCity: z.ZodString;
     woreda: z.ZodOptional<z.ZodString>;
     landmark: z.ZodString;
-    phone: z.ZodString;
+    phone: z.ZodEffects<z.ZodString, string, string>;
     isDefault: z.ZodDefault<z.ZodBoolean>;
 }, "strip", z.ZodTypeAny, {
     region: string;

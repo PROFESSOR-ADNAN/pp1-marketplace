@@ -20,7 +20,27 @@ export const apiFetch = async (endpoint: string, options: RequestInit = {}) => {
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.detail || errorData.message || errorData.error || `Request failed with status ${response.status}`);
+    let errorMessage = '';
+
+    if (Array.isArray(errorData.errors) && errorData.errors.length > 0) {
+      errorMessage = errorData.errors
+        .map((e: any) => e.message || (e.path ? `${e.path.join('.')}: ${e.message}` : JSON.stringify(e)))
+        .join(', ');
+    } else if (typeof errorData.detail === 'string') {
+      errorMessage = errorData.detail;
+    } else if (typeof errorData.message === 'string') {
+      errorMessage = errorData.message;
+    } else if (typeof errorData.error === 'string') {
+      errorMessage = errorData.error;
+    } else if (errorData.detail && typeof errorData.detail === 'object') {
+      errorMessage = JSON.stringify(errorData.detail);
+    } else if (errorData.message && typeof errorData.message === 'object') {
+      errorMessage = JSON.stringify(errorData.message);
+    } else {
+      errorMessage = `Request failed with status ${response.status}`;
+    }
+
+    throw new Error(errorMessage);
   }
 
   return response.json();

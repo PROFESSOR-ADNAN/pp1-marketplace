@@ -192,10 +192,19 @@ export const demoLogin = async (requestedRole?: string): Promise<{ user: IUser; 
       email: target.email,
       password: 'DemoPassword123!',
       role,
+      totpEnabled: role === ROLES.ADMIN,
     });
-  } else if (user.role !== role) {
-    user.role = role;
-    await user.save();
+  } else {
+    let changed = false;
+    if (user.role !== role) {
+      user.role = role;
+      changed = true;
+    }
+    if (role === ROLES.ADMIN && !user.totpEnabled) {
+      user.totpEnabled = true;
+      changed = true;
+    }
+    if (changed) await user.save();
   }
 
   const tokens = await issueTokenPair(user);

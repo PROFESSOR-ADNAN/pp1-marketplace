@@ -53,13 +53,27 @@ export const CheckoutPage: React.FC = () => {
     setError('');
 
     try {
+      // Normalize Ethiopian phone number
+      let rawPhone = form.phone.trim().replace(/[^\d+]/g, '');
+      let normalizedPhone = rawPhone;
+      if (rawPhone.startsWith('0')) {
+        normalizedPhone = `+251${rawPhone.slice(1)}`;
+      } else if (!rawPhone.startsWith('+')) {
+        normalizedPhone = `+251${rawPhone}`;
+      }
+
+      const submissionAddress = {
+        ...form,
+        phone: normalizedPhone,
+      };
+
       const data = await apiFetch('/orders', {
         method: 'POST',
         headers: {
           'Idempotency-Key': `idemp-${Date.now()}`,
         },
         body: JSON.stringify({
-          deliveryAddress: form,
+          deliveryAddress: submissionAddress,
           returnUrl: `${window.location.origin}/orders/confirmation`,
         }),
       });
@@ -68,7 +82,8 @@ export const CheckoutPage: React.FC = () => {
         window.location.href = data.checkoutUrl;
       }
     } catch (err: any) {
-      setError(err.message || 'Checkout failed');
+      const msg = typeof err === 'string' ? err : err.message ? (typeof err.message === 'string' ? err.message : JSON.stringify(err.message)) : 'Checkout failed';
+      setError(msg);
       setLoading(false);
     }
   };

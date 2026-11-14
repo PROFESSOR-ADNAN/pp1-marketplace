@@ -13,6 +13,7 @@ import { LoginPage } from './pages/LoginPage.js';
 import { RegisterPage } from './pages/RegisterPage.js';
 import { WishlistPage } from './pages/WishlistPage.js';
 import { SellerDashboardPage } from './pages/SellerDashboardPage.js';
+import { AdminDashboardPage } from './pages/AdminDashboardPage.js';
 import { NotFoundPage } from './pages/NotFoundPage.js';
 
 export const App: React.FC = () => {
@@ -34,6 +35,8 @@ export const App: React.FC = () => {
           <Route path="/confirmation/*" element={<OrderConfirmationPage />} />
           <Route path="/seller" element={<SellerDashboardPage />} />
           <Route path="/seller/dashboard" element={<SellerDashboardPage />} />
+          <Route path="/admin" element={<AdminDashboardPage />} />
+          <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="*" element={<NotFoundPage />} />
