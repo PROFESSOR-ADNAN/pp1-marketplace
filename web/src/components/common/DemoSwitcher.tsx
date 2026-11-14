@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext.js';
-import { Sparkles, User, Store, ShieldCheck, Check } from 'lucide-react';
+import { Sparkles, User, Store, ShieldCheck, Check, Truck } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export const DemoSwitcher: React.FC = () => {
   const { user, demoLogin } = useAuth();
@@ -71,6 +72,15 @@ export const DemoSwitcher: React.FC = () => {
             <span>Admin</span>
             {user?.role === 'admin' && <Check className="w-3 h-3 text-indigo-200" />}
           </button>
+
+          <Link
+            to="/delivery"
+            className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white transition font-medium"
+            title="View Driver Delivery Run Sheet"
+          >
+            <Truck className="w-3 h-3 text-emerald-400" />
+            <span>Driver Portal</span>
+          </Link>
         </div>
       </div>
     </div>

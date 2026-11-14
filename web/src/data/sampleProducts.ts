@@ -28,6 +28,7 @@ export const ETHIOPIAN_SAMPLE_PRODUCTS: ProductItem[] = [
     images: [
       'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=800&auto=format&fit=crop&q=80',
       'https://images.unsplash.com/photo-1607083206869-4c7672e72a8a?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=800&auto=format&fit=crop&q=80',
     ],
     stock: 12,
     seller: {
@@ -49,6 +50,7 @@ export const ETHIOPIAN_SAMPLE_PRODUCTS: ProductItem[] = [
     images: [
       'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=800&auto=format&fit=crop&q=80',
       'https://images.unsplash.com/photo-1587734195503-904fca47e0e9?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&auto=format&fit=crop&q=80',
     ],
     stock: 45,
     seller: {
@@ -70,6 +72,7 @@ export const ETHIOPIAN_SAMPLE_PRODUCTS: ProductItem[] = [
     images: [
       'https://images.unsplash.com/photo-1610632380989-680fe40816c6?w=800&auto=format&fit=crop&q=80',
       'https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?w=800&auto=format&fit=crop&q=80',
     ],
     stock: 18,
     seller: {
@@ -91,6 +94,7 @@ export const ETHIOPIAN_SAMPLE_PRODUCTS: ProductItem[] = [
     images: [
       'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=800&auto=format&fit=crop&q=80',
       'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=800&auto=format&fit=crop&q=80',
     ],
     stock: 9,
     seller: {
@@ -111,6 +115,8 @@ export const ETHIOPIAN_SAMPLE_PRODUCTS: ProductItem[] = [
     category: 'Handmade Crafts',
     images: [
       'https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1590736969955-71cc94801759?w=800&auto=format&fit=crop&q=80',
     ],
     stock: 7,
     seller: {
@@ -132,6 +138,7 @@ export const ETHIOPIAN_SAMPLE_PRODUCTS: ProductItem[] = [
     images: [
       'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=800&auto=format&fit=crop&q=80',
       'https://images.unsplash.com/photo-1532336414038-cf19250c5757?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1509358271058-acd22cc93898?w=800&auto=format&fit=crop&q=80',
     ],
     stock: 60,
     seller: {
@@ -152,6 +159,8 @@ export const ETHIOPIAN_SAMPLE_PRODUCTS: ProductItem[] = [
     category: 'Traditional Clothing',
     images: [
       'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1607083206869-4c7672e72a8a?w=800&auto=format&fit=crop&q=80',
     ],
     stock: 15,
     seller: {
@@ -171,6 +180,8 @@ export const ETHIOPIAN_SAMPLE_PRODUCTS: ProductItem[] = [
     category: 'Coffee & Spices',
     images: [
       'https://images.unsplash.com/photo-1587734195503-904fca47e0e9?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&auto=format&fit=crop&q=80',
     ],
     stock: 30,
     seller: {
@@ -190,6 +201,8 @@ export const ETHIOPIAN_SAMPLE_PRODUCTS: ProductItem[] = [
     category: 'Handmade Crafts',
     images: [
       'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1611591475882-d2780e03e911?w=800&auto=format&fit=crop&q=80',
     ],
     stock: 14,
     seller: {
@@ -210,6 +223,8 @@ export const ETHIOPIAN_SAMPLE_PRODUCTS: ProductItem[] = [
     category: 'Food & Honey',
     images: [
       'https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1558642452-9d2a7deb7f62?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1471943311424-646960669fbc?w=800&auto=format&fit=crop&q=80',
     ],
     stock: 25,
     seller: {
@@ -230,6 +245,8 @@ export const ETHIOPIAN_SAMPLE_PRODUCTS: ProductItem[] = [
     category: 'Leather Goods',
     images: [
       'https://images.unsplash.com/photo-1627123424574-724758594e93?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1520639888713-7851133b1ed0?w=800&auto=format&fit=crop&q=80',
     ],
     stock: 16,
     seller: {
@@ -249,6 +266,8 @@ export const ETHIOPIAN_SAMPLE_PRODUCTS: ProductItem[] = [
     category: 'Food & Honey',
     images: [
       'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&auto=format&fit=crop&q=80',
     ],
     stock: 40,
     seller: {

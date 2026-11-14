@@ -167,14 +167,16 @@ export const ProductListingPage: React.FC = () => {
             >
               {/* Product Image */}
               <div className="h-56 bg-slate-100 relative overflow-hidden">
-                <img
-                  src={p.images?.[0] || 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=600&auto=format&fit=crop&q=80'}
-                  alt={p.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  loading="lazy"
-                />
+                <Link to={`/products/${p._id}`} className="block w-full h-full cursor-pointer">
+                  <img
+                    src={p.images?.[0] || 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=600&auto=format&fit=crop&q=80'}
+                    alt={p.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    loading="lazy"
+                  />
+                </Link>
                 {p.badge && (
-                  <span className="absolute top-3 left-3 px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wider bg-emerald-600 text-white rounded-lg shadow-sm">
+                  <span className="absolute top-3 left-3 px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wider bg-emerald-600 text-white rounded-lg shadow-sm pointer-events-none">
                     {p.badge}
                   </span>
                 )}
@@ -200,19 +202,17 @@ export const ProductListingPage: React.FC = () => {
                     }`}
                   />
                 </button>
-                <span className="absolute bottom-3 right-3 px-2.5 py-1 text-xs font-semibold bg-white/95 backdrop-blur-md rounded-lg text-slate-800 shadow-sm">
+                <span className="absolute bottom-3 right-3 px-2.5 py-1 text-xs font-semibold bg-white/95 backdrop-blur-md rounded-lg text-slate-800 shadow-sm pointer-events-none">
                   {p.category}
                 </span>
               </div>
 
               {/* Product Body */}
               <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
-                <div className="space-y-1.5">
-                  <Link to={`/products/${p._id}`}>
-                    <h3 className="font-extrabold text-slate-900 hover:text-emerald-700 transition line-clamp-1 text-base">
-                      {p.name}
-                    </h3>
-                  </Link>
+                <Link to={`/products/${p._id}`} className="block space-y-1.5 group/link cursor-pointer">
+                  <h3 className="font-extrabold text-slate-900 group-hover/link:text-emerald-700 transition line-clamp-1 text-base">
+                    {p.name}
+                  </h3>
                   {p.amharicName && (
                     <div className="text-xs text-emerald-800 font-medium line-clamp-1">
                       {p.amharicName}
@@ -236,7 +236,7 @@ export const ProductListingPage: React.FC = () => {
                     <span>{p.rating || 4.9}</span>
                     <span className="text-slate-400 font-normal">({p.reviewsCount || 42})</span>
                   </div>
-                </div>
+                </Link>
 
                 {/* Price and Cart Button */}
                 <div className="pt-3 border-t border-slate-100 flex items-center justify-between">

@@ -88,30 +88,10 @@ export const ProductDetailPage: React.FC = () => {
     );
   }
 
-  // Ensure gallery has multiple angles for rich exploration
+  // Ensure gallery uses only the authentic images belonging to this product
   const galleryImages: string[] = Array.isArray(product.images) && product.images.length > 0
-    ? product.images
-    : ['https://images.unsplash.com/photo-1544816155-12df9643f363?w=800&auto=format&fit=crop&q=80'];
-
-  // If only 1 image exists, generate high quality secondary perspective views
-  if (galleryImages.length === 1) {
-    if (product.category === 'Coffee & Spices') {
-      galleryImages.push(
-        'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=800&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1587734195503-904fca47e0e9?w=800&auto=format&fit=crop&q=80'
-      );
-    } else if (product.category === 'Traditional Clothing') {
-      galleryImages.push(
-        'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=800&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1607083206869-4c7672e72a8a?w=800&auto=format&fit=crop&q=80'
-      );
-    } else {
-      galleryImages.push(
-        'https://images.unsplash.com/photo-1544816155-12df9643f363?w=800&auto=format&fit=crop&q=80',
-        'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=800&auto=format&fit=crop&q=80'
-      );
-    }
-  }
+    ? product.images.filter(Boolean)
+    : ['https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=800&auto=format&fit=crop&q=80'];
 
   const handleAddToCart = async () => {
     await addItem(product._id, quantity);

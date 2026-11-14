@@ -13,8 +13,14 @@ import {
   RefreshCw,
   Trash2,
   Eye,
+  EyeOff,
   X,
-  Image as ImageIcon,
+  Upload,
+  ShieldCheck,
+  FileText,
+  Check,
+  Building,
+  Sparkles,
 } from 'lucide-react';
 import { apiFetch } from '../services/api.js';
 import { useAuth } from '../context/AuthContext.js';
@@ -24,26 +30,46 @@ const ETHIOPIAN_IMAGE_PRESETS = [
   {
     label: 'Yirgacheffe Coffee',
     url: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=800&auto=format&fit=crop&q=80',
+    details: [
+      'https://images.unsplash.com/photo-1587734195503-904fca47e0e9?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800&auto=format&fit=crop&q=80',
+    ],
     category: 'Coffee & Spices',
   },
   {
     label: 'Habesha Kemis Tilf',
     url: 'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=800&auto=format&fit=crop&q=80',
+    details: [
+      'https://images.unsplash.com/photo-1607083206869-4c7672e72a8a?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=800&auto=format&fit=crop&q=80',
+    ],
     category: 'Traditional Clothing',
   },
   {
-    label: 'Clay Jebena Set',
-    url: 'https://images.unsplash.com/photo-1544816155-12df9643f363?w=800&auto=format&fit=crop&q=80',
+    label: 'Clay Jebena Ceremony Set',
+    url: 'https://images.unsplash.com/photo-1610632380989-680fe40816c6?w=800&auto=format&fit=crop&q=80',
+    details: [
+      'https://images.unsplash.com/photo-1565193566173-7a0ee3dbe261?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?w=800&auto=format&fit=crop&q=80',
+    ],
     category: 'Handmade Crafts',
   },
   {
     label: 'Leather Satchel Bag',
     url: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=800&auto=format&fit=crop&q=80',
-    category: 'Leather & Footwear',
+    details: [
+      'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=800&auto=format&fit=crop&q=80',
+    ],
+    category: 'Leather Goods',
   },
   {
-    label: 'Organic Mitmita & Berbere',
+    label: 'Organic Berbere Blend',
     url: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=800&auto=format&fit=crop&q=80',
+    details: [
+      'https://images.unsplash.com/photo-1532336414038-cf19250c5757?w=800&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1509358271058-acd22cc93898?w=800&auto=format&fit=crop&q=80',
+    ],
     category: 'Coffee & Spices',
   },
 ];
@@ -52,7 +78,8 @@ const CATEGORIES = [
   'Coffee & Spices',
   'Traditional Clothing',
   'Handmade Crafts',
-  'Leather & Footwear',
+  'Leather Goods',
+  'Food & Honey',
   'Art & Musical Instruments',
   'Home & Living',
 ];
@@ -66,17 +93,34 @@ export const SellerDashboardPage: React.FC = () => {
   const [withdrawalSuccess, setWithdrawalSuccess] = useState(false);
   const [notification, setNotification] = useState<string | null>(null);
 
+  // Verification state
+  const [isVerifiedMerchant, setIsVerifiedMerchant] = useState(
+    user?.email === 'demo.seller@souq.test' || localStorage.getItem('souq_seller_verified') === 'true'
+  );
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
+  const [verificationForm, setVerificationForm] = useState({
+    businessName: user?.name || 'Bole Artisan Crafts',
+    tinNumber: 'ETH-TIN-8934021',
+    workshopAddress: 'Bole Subcity, Woreda 03, Addis Ababa',
+    phone: '+251911223344',
+    tradeLicenseNo: 'TL-ADDIS-2026-994',
+  });
+  const [verifyingSubmitting, setVerifyingSubmitting] = useState(false);
+
   // Add Product Modal State
   const [showAddModal, setShowAddModal] = useState(false);
   const [submittingProduct, setSubmittingProduct] = useState(false);
   const [modalError, setModalError] = useState<string | null>(null);
+
+  // 1 Big Cover Image + up to 3 Detail Angle Images
+  const [coverImage, setCoverImage] = useState<string>(ETHIOPIAN_IMAGE_PRESETS[0].url);
+  const [detailImages, setDetailImages] = useState<string[]>(ETHIOPIAN_IMAGE_PRESETS[0].details || []);
   const [newProduct, setNewProduct] = useState({
     name: '',
     description: '',
     category: CATEGORIES[0],
     priceETB: '',
     stock: '15',
-    imageUrl: ETHIOPIAN_IMAGE_PRESETS[0].url,
   });
 
   const showToast = (msg: string) => {
@@ -97,7 +141,6 @@ export const SellerDashboardPage: React.FC = () => {
       if (Array.isArray(myProductsRes) && myProductsRes.length > 0) {
         setProducts(myProductsRes);
       } else {
-        // Fallback to marketplace products if empty
         const generalProducts = await apiFetch('/products?limit=12').catch(() => ({ products: [] }));
         setProducts(generalProducts.products || []);
       }
@@ -112,20 +155,34 @@ export const SellerDashboardPage: React.FC = () => {
     fetchDashboardData();
   }, []);
 
-  const handleMarkShipped = async (orderId: string) => {
-    setUpdatingId(orderId);
-    try {
-      await apiFetch(`/orders/${orderId}/status`, {
-        method: 'PATCH',
-        body: JSON.stringify({ status: 'SHIPPED' }),
-      });
-      showToast('Order marked as SHIPPED. Courier dispatched and customer notified via AfroMessage SMS.');
-      await fetchDashboardData();
-    } catch (err: any) {
-      alert(err.message || 'Failed to update order status');
-    } finally {
-      setUpdatingId(null);
-    }
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>, isCover: boolean, index?: number) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const result = event.target?.result as string;
+      if (result) {
+        if (isCover) {
+          setCoverImage(result);
+        } else if (index !== undefined) {
+          setDetailImages((prev) => {
+            const next = [...prev];
+            next[index] = result;
+            return next;
+          });
+        } else {
+          setDetailImages((prev) => [...prev, result].slice(0, 3));
+        }
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSelectPreset = (preset: typeof ETHIOPIAN_IMAGE_PRESETS[0]) => {
+    setCoverImage(preset.url);
+    setDetailImages(preset.details || []);
+    setNewProduct((prev) => ({ ...prev, category: preset.category }));
   };
 
   const handleCreateProduct = async (e: React.FormEvent) => {
@@ -155,6 +212,8 @@ export const SellerDashboardPage: React.FC = () => {
     setSubmittingProduct(true);
     try {
       const santimPrice = Math.round(priceNum * 100);
+      const allImages = [coverImage, ...detailImages].filter(Boolean);
+
       await apiFetch('/products', {
         method: 'POST',
         body: JSON.stringify({
@@ -163,11 +222,11 @@ export const SellerDashboardPage: React.FC = () => {
           category: newProduct.category,
           price: santimPrice,
           stock: stockNum,
-          images: [newProduct.imageUrl || ETHIOPIAN_IMAGE_PRESETS[0].url],
+          images: allImages.length > 0 ? allImages : [coverImage],
         }),
       });
 
-      showToast(`Product "${newProduct.name}" listed successfully in the marketplace!`);
+      showToast(`Product "${newProduct.name}" listed with 1 main cover and ${detailImages.length} gallery images!`);
       setShowAddModal(false);
       setNewProduct({
         name: '',
@@ -175,13 +234,31 @@ export const SellerDashboardPage: React.FC = () => {
         category: CATEGORIES[0],
         priceETB: '',
         stock: '15',
-        imageUrl: ETHIOPIAN_IMAGE_PRESETS[0].url,
       });
       await fetchDashboardData();
     } catch (err: any) {
       setModalError(err.message || 'Failed to create product');
     } finally {
       setSubmittingProduct(false);
+    }
+  };
+
+  const handleToggleVisibility = async (productId: string, currentStatus: boolean, title: string) => {
+    setUpdatingId(productId);
+    const newStatus = !currentStatus;
+    try {
+      await apiFetch(`/products/${productId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ isActive: newStatus }),
+      });
+      setProducts((prev) =>
+        prev.map((p) => (p._id === productId ? { ...p, isActive: newStatus } : p))
+      );
+      showToast(`"${title}" is now ${newStatus ? 'visible to public buyers' : 'hidden from public marketplace'}.`);
+    } catch (err: any) {
+      alert(err.message || 'Failed to toggle product visibility');
+    } finally {
+      setUpdatingId(null);
     }
   };
 
@@ -222,6 +299,33 @@ export const SellerDashboardPage: React.FC = () => {
     }
   };
 
+  const handleMarkShipped = async (orderId: string) => {
+    setUpdatingId(orderId);
+    try {
+      await apiFetch(`/orders/${orderId}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status: 'SHIPPED' }),
+      });
+      showToast('Order marked as SHIPPED. Courier dispatched and customer notified via AfroMessage SMS.');
+      await fetchDashboardData();
+    } catch (err: any) {
+      alert(err.message || 'Failed to update order status');
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  const handleApproveVerification = () => {
+    setVerifyingSubmitting(true);
+    setTimeout(() => {
+      setVerifyingSubmitting(false);
+      setIsVerifiedMerchant(true);
+      localStorage.setItem('souq_seller_verified', 'true');
+      setShowVerificationModal(false);
+      showToast('Merchant credentials verified! Your official Ethiopian Merchant TIN badge is active.');
+    }, 600);
+  };
+
   // Compute metrics
   const totalRevenueSantim = orders
     .filter((o) => o.status === 'PAID' || o.status === 'SHIPPED' || o.status === 'DELIVERED')
@@ -238,17 +342,34 @@ export const SellerDashboardPage: React.FC = () => {
       <div className="bg-gradient-to-r from-emerald-800 to-teal-900 rounded-3xl p-8 text-white shadow-lg flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
           <div className="flex items-center gap-2 mb-2">
-            <span className="bg-emerald-500/30 text-emerald-300 text-xs font-bold px-3 py-1 rounded-full border border-emerald-400/20">
-              Verified Merchant • Addis Ababa
-            </span>
+            {isVerifiedMerchant ? (
+              <span className="bg-emerald-500/30 text-emerald-300 text-xs font-bold px-3 py-1 rounded-full border border-emerald-400/20 flex items-center gap-1.5">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-300" />
+                Verified Ethiopian Merchant • TIN: ETH-TIN-8934021
+              </span>
+            ) : (
+              <span className="bg-amber-500/30 text-amber-200 text-xs font-bold px-3 py-1 rounded-full border border-amber-400/30 flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-amber-300" />
+                Merchant Verification Pending Review
+              </span>
+            )}
           </div>
           <h1 className="text-3xl font-black">{user?.name || 'Bole Artisan Crafts'}</h1>
           <p className="text-emerald-100 text-sm mt-1 max-w-xl">
-            Add new products to your Ethiopian artisan catalog, monitor live inventory, track landmark customer shipments, and withdraw Telebirr earnings.
+            Upload multi-angle photos for your catalog, hide/unhide products on the fly, manage driver shipments, and monitor your 95% net payout ledger.
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
+          {!isVerifiedMerchant && (
+            <button
+              onClick={() => setShowVerificationModal(true)}
+              className="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black px-4 py-2.5 rounded-xl shadow-md transition text-xs flex items-center gap-2"
+            >
+              <ShieldCheck className="w-4 h-4" /> Submit Merchant TIN & ID
+            </button>
+          )}
+
           <button
             onClick={() => setShowAddModal(true)}
             className="bg-white hover:bg-emerald-50 text-emerald-900 font-extrabold px-5 py-2.5 rounded-xl shadow-md transition text-xs flex items-center gap-2"
@@ -273,6 +394,35 @@ export const SellerDashboardPage: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Verification Notice Banner */}
+      {!isVerifiedMerchant && (
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-xs text-amber-900 shadow-xs">
+          <div className="space-y-1">
+            <h3 className="font-bold text-sm flex items-center gap-1.5 text-amber-950">
+              <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0" />
+              Merchant Identity & Pricing Verification Required
+            </h3>
+            <p className="text-amber-800 leading-relaxed max-w-2xl">
+              Under Ethiopian commercial regulations, all sellers must verify their business TIN and national identity before listing products publicly. This ensures authentic prices and protects buyers against fraud.
+            </p>
+          </div>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <button
+              onClick={handleApproveVerification}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-sm transition"
+            >
+              ⚡ Fast-Track Verify (Demo Mode)
+            </button>
+            <button
+              onClick={() => setShowVerificationModal(true)}
+              className="bg-white hover:bg-slate-50 border border-amber-300 font-bold px-4 py-2 rounded-xl text-xs transition"
+            >
+              View Verification Desk
+            </button>
+          </div>
+        </div>
+      )}
 
       {notification && (
         <div className="bg-emerald-50 border border-emerald-200 text-emerald-900 p-4 rounded-2xl text-xs font-bold flex items-center gap-2 shadow-sm animate-fade-in">
@@ -327,7 +477,9 @@ export const SellerDashboardPage: React.FC = () => {
             <Package className="w-4 h-4 text-indigo-600" />
           </div>
           <div className="text-2xl font-black text-slate-900">{products.length}</div>
-          <p className="text-xs text-slate-500">Active products in your store</p>
+          <p className="text-xs text-slate-500">
+            {products.filter((p) => p.isActive !== false).length} visible / {products.filter((p) => p.isActive === false).length} hidden
+          </p>
         </div>
       </div>
 
@@ -337,7 +489,7 @@ export const SellerDashboardPage: React.FC = () => {
           <div>
             <h2 className="text-lg font-black text-slate-900">Your Product Catalog</h2>
             <p className="text-xs text-slate-500">
-              Manage stock, update prices, or add new Ethiopian products to the marketplace catalog.
+              Manage stock, hide/unhide products from the public marketplace, or upload new listings with multi-angle photos.
             </p>
           </div>
 
@@ -372,25 +524,29 @@ export const SellerDashboardPage: React.FC = () => {
                   <th className="py-3 px-3">Category</th>
                   <th className="py-3 px-3">Price (ETB)</th>
                   <th className="py-3 px-3">Stock Level</th>
-                  <th className="py-3 px-3">Status</th>
+                  <th className="py-3 px-3">Visibility</th>
                   <th className="py-3 px-3 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {products.map((prod) => {
                   const isLowStock = prod.stock <= 5;
+                  const isVisible = prod.isActive !== false;
+
                   return (
                     <tr key={prod._id} className="hover:bg-slate-50 transition">
                       <td className="py-3 px-3">
                         <div className="flex items-center gap-3">
                           <img
-                            src={prod.images?.[0] || ETHIOPIAN_IMAGE_PRESETS[0].url}
+                            src={prod.images?.[0] || coverImage}
                             alt=""
                             className="w-12 h-12 object-cover rounded-xl bg-slate-100 flex-shrink-0 border border-slate-200"
                           />
                           <div className="min-w-0">
                             <p className="font-bold text-slate-900 truncate max-w-xs">{prod.name}</p>
-                            <span className="text-[10px] text-slate-400 line-clamp-1">{prod.description}</span>
+                            <span className="text-[10px] text-slate-400 line-clamp-1">
+                              {prod.images?.length > 1 ? `${prod.images.length} photos` : '1 photo'} • {prod.description}
+                            </span>
                           </div>
                         </div>
                       </td>
@@ -440,27 +596,44 @@ export const SellerDashboardPage: React.FC = () => {
                         </div>
                       </td>
 
+                      {/* Visibility Status Badge */}
                       <td className="py-3 px-3">
                         <span
-                          className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                            prod.isActive !== false
+                          className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                            isVisible
                               ? 'bg-emerald-100 text-emerald-800'
-                              : 'bg-slate-100 text-slate-500'
+                              : 'bg-amber-100 text-amber-800'
                           }`}
                         >
-                          {prod.isActive !== false ? 'Active' : 'Inactive'}
+                          {isVisible ? 'Visible in Store' : 'Hidden (Draft)'}
                         </span>
                       </td>
 
+                      {/* Actions: Hide/Unhide, View, Delete */}
                       <td className="py-3 px-3 text-right">
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex items-center justify-end gap-1.5">
+                          {/* Hide / Unhide Toggle */}
+                          <button
+                            onClick={() => handleToggleVisibility(prod._id, isVisible, prod.name)}
+                            disabled={updatingId === prod._id}
+                            className={`p-1.5 rounded-lg transition ${
+                              isVisible
+                                ? 'text-amber-600 hover:bg-amber-50'
+                                : 'text-emerald-600 hover:bg-emerald-50'
+                            }`}
+                            title={isVisible ? 'Hide product from marketplace' : 'Unhide / Publish to marketplace'}
+                          >
+                            {isVisible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          </button>
+
                           <Link
                             to={`/products/${prod._id}`}
                             className="p-1.5 text-slate-400 hover:text-emerald-600 transition"
-                            title="View product in store"
+                            title="Preview product page"
                           >
                             <Eye className="w-4 h-4" />
                           </Link>
+
                           <button
                             onClick={() => handleDeleteProduct(prod._id, prod.name)}
                             disabled={updatingId === prod._id}
@@ -571,7 +744,7 @@ export const SellerDashboardPage: React.FC = () => {
         )}
       </div>
 
-      {/* Add Product Modal */}
+      {/* Add Product Modal (1 Big Cover Image + up to 3 Detail Angle Images) */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
           <div className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto">
@@ -582,7 +755,9 @@ export const SellerDashboardPage: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="text-lg font-black text-slate-900">Add New Ethiopian Product</h3>
-                  <p className="text-xs text-slate-500">List an artisan product in the SOUQ marketplace catalog.</p>
+                  <p className="text-xs text-slate-500">
+                    Upload 1 big cover image + 3 matching detail angle photos.
+                  </p>
                 </div>
               </div>
               <button
@@ -600,7 +775,7 @@ export const SellerDashboardPage: React.FC = () => {
               </div>
             )}
 
-            <form onSubmit={handleCreateProduct} className="space-y-4">
+            <form onSubmit={handleCreateProduct} className="space-y-5">
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
                   Product Name / Title *
@@ -688,41 +863,117 @@ export const SellerDashboardPage: React.FC = () => {
                 />
               </div>
 
-              {/* Photo Presets & Custom URL */}
-              <div className="space-y-2">
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-                  Product Image (Select Preset or Provide URL)
-                </label>
+              {/* Multi-Image Upload & Management */}
+              <div className="space-y-4 pt-2 border-t border-slate-100">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-800">
+                      Product Images (1 Cover + Up to 3 Details)
+                    </h4>
+                    <p className="text-[11px] text-slate-500">
+                      Upload from your device or pick a curated Ethiopian craft preset.
+                    </p>
+                  </div>
+                </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-                  {ETHIOPIAN_IMAGE_PRESETS.map((preset) => {
-                    const isSelected = newProduct.imageUrl === preset.url;
-                    return (
+                {/* Cover Image Upload (Big) */}
+                <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                      <Sparkles className="w-4 h-4 text-emerald-600" />
+                      1. Main Cover Image (Displays Big on Storefront)
+                    </span>
+                    <label className="cursor-pointer bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-xs">
+                      <Upload className="w-3.5 h-3.5 text-slate-500" />
+                      Upload File
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleFileUpload(e, true)}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+
+                  <div className="flex items-center gap-4">
+                    <img
+                      src={coverImage}
+                      alt="Cover Preview"
+                      className="w-24 h-24 object-cover rounded-xl border border-slate-300 bg-white shadow-xs"
+                    />
+                    <input
+                      type="url"
+                      value={coverImage}
+                      onChange={(e) => setCoverImage(e.target.value)}
+                      placeholder="Or enter direct image URL"
+                      className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs outline-none focus:ring-2 focus:ring-emerald-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Detail Gallery Images (3 Smaller Thumbnails) */}
+                <div className="space-y-2">
+                  <span className="text-xs font-bold text-slate-700">
+                    2. Detail Angle Images (Displayed as Thumbnails in Details Page)
+                  </span>
+
+                  <div className="grid grid-cols-3 gap-3">
+                    {[0, 1, 2].map((idx) => {
+                      const imgUrl = detailImages[idx];
+                      return (
+                        <div
+                          key={idx}
+                          className="p-3 bg-slate-50 border border-slate-200 rounded-2xl space-y-2 text-center"
+                        >
+                          <span className="text-[10px] font-bold text-slate-500 block">Angle {idx + 1}</span>
+                          <div className="h-20 bg-white rounded-xl border border-slate-200 overflow-hidden relative group">
+                            {imgUrl ? (
+                              <img src={imgUrl} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex flex-col items-center justify-center text-slate-300 text-[10px]">
+                                Empty
+                              </div>
+                            )}
+                          </div>
+                          <label className="cursor-pointer inline-block w-full py-1 bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 text-[10px] font-bold rounded-lg transition">
+                            Upload
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => handleFileUpload(e, false, idx)}
+                              className="hidden"
+                            />
+                          </label>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* One-Click Ethiopian Sample Presets */}
+                <div className="space-y-1.5 pt-2">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                    Quick Preset Sets (Authentic Multi-Angle Photos)
+                  </span>
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                    {ETHIOPIAN_IMAGE_PRESETS.map((preset) => (
                       <button
                         key={preset.label}
                         type="button"
-                        onClick={() => setNewProduct({ ...newProduct, imageUrl: preset.url, category: preset.category })}
-                        className={`group relative rounded-xl overflow-hidden border-2 text-left transition ${
-                          isSelected ? 'border-emerald-600 ring-2 ring-emerald-500/30' : 'border-slate-200 opacity-70 hover:opacity-100'
+                        onClick={() => handleSelectPreset(preset)}
+                        className={`p-1.5 rounded-xl border text-left transition ${
+                          coverImage === preset.url
+                            ? 'border-emerald-600 ring-2 ring-emerald-500/30 bg-emerald-50/50'
+                            : 'border-slate-200 hover:border-slate-300'
                         }`}
                       >
-                        <img src={preset.url} alt={preset.label} className="w-full h-16 object-cover" />
-                        <span className="block p-1 text-[9px] font-bold text-slate-800 truncate bg-white">
+                        <img src={preset.url} alt="" className="w-full h-12 object-cover rounded-lg" />
+                        <span className="block text-[10px] font-bold text-slate-800 truncate mt-1">
                           {preset.label}
                         </span>
                       </button>
-                    );
-                  })}
-                </div>
-
-                <div className="pt-2">
-                  <input
-                    type="url"
-                    placeholder="Or paste a custom image URL (https://...)"
-                    value={newProduct.imageUrl}
-                    onChange={(e) => setNewProduct({ ...newProduct, imageUrl: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-emerald-500 outline-none"
-                  />
+                    ))}
+                  </div>
                 </div>
               </div>
 
@@ -741,7 +992,7 @@ export const SellerDashboardPage: React.FC = () => {
                 >
                   {submittingProduct ? (
                     <>
-                      <RefreshCw className="w-4 h-4 animate-spin" /> Listing Product...
+                      <RefreshCw className="w-4 h-4 animate-spin" /> Publishing...
                     </>
                   ) : (
                     <>
@@ -751,6 +1002,104 @@ export const SellerDashboardPage: React.FC = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Merchant Verification Modal */}
+      {showVerificationModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl space-y-6">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center">
+                  <ShieldCheck className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-slate-900">Merchant Business Verification</h3>
+                  <p className="text-xs text-slate-500">Ethiopian Tax Identification & Trade Licensing</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowVerificationModal(false)}
+                className="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4 text-xs">
+              <div>
+                <label className="block font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Registered Trade / Workshop Name *
+                </label>
+                <input
+                  type="text"
+                  value={verificationForm.businessName}
+                  onChange={(e) => setVerificationForm({ ...verificationForm, businessName: e.target.value })}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Ethiopian TIN (Tax Identification Number) *
+                </label>
+                <input
+                  type="text"
+                  value={verificationForm.tinNumber}
+                  onChange={(e) => setVerificationForm({ ...verificationForm, tinNumber: e.target.value })}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-mono font-bold"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Physical Workshop Address in Addis Ababa *
+                </label>
+                <input
+                  type="text"
+                  value={verificationForm.workshopAddress}
+                  onChange={(e) => setVerificationForm({ ...verificationForm, workshopAddress: e.target.value })}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Trade License / Kebele ID Number *
+                </label>
+                <input
+                  type="text"
+                  value={verificationForm.tradeLicenseNo}
+                  onChange={(e) => setVerificationForm({ ...verificationForm, tradeLicenseNo: e.target.value })}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl font-mono"
+                />
+              </div>
+
+              <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-xl text-[11px] text-emerald-900 leading-relaxed">
+                Verification takes between 2-4 hours by the SOUQ Superadmin. Once approved, your listings receive a verified shield badge and escrow payouts are enabled.
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setShowVerificationModal(false)}
+                className="px-4 py-2 text-slate-600 hover:bg-slate-100 font-bold rounded-xl text-xs transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleApproveVerification}
+                disabled={verifyingSubmitting}
+                className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl text-xs shadow-md transition flex items-center gap-1.5"
+              >
+                <Check className="w-4 h-4" />
+                {verifyingSubmitting ? 'Verifying...' : 'Submit & Verify Merchant'}
+              </button>
+            </div>
           </div>
         </div>
       )}
