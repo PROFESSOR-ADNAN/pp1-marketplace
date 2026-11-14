@@ -36,9 +36,39 @@ export interface SendEmailResult {
 }
 
 /**
- * Sends an email via Gmail SMTP
+ * Sends an email via Resend HTTPS (Port 443) or Gmail SMTP
  */
 export const sendEmail = async (options: SendEmailOptions): Promise<SendEmailResult> => {
+  // 1. If Resend HTTPS API key is available, use it (works 100% on Render Free Tier over Port 443)
+  if (config.email.resendApiKey) {
+    try {
+      const res = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${config.email.resendApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: 'SOUQ Marketplace <onboarding@resend.dev>',
+          to: [options.to],
+          subject: options.subject,
+          html: options.html,
+          text: options.text || options.subject,
+        }),
+      });
+      const data: any = await res.json();
+      if (res.ok && data.id) {
+        console.log(`[Resend HTTPS] Email sent to ${options.to} (Id: ${data.id})`);
+        return { success: true, messageId: data.id };
+      } else {
+        console.warn('[Resend Warning]', data);
+      }
+    } catch (e: any) {
+      console.error('[Resend Error]', e.message);
+    }
+  }
+
+  // 2. Otherwise use Gmail SMTP
   const mailer = getTransporter();
 
   // Mock / dev fallback when Gmail credentials are not configured
@@ -59,8 +89,12 @@ export const sendEmail = async (options: SendEmailOptions): Promise<SendEmailRes
     console.log(`[Gmail] Email sent to ${options.to} (MessageId: ${info.messageId})`);
     return { success: true, messageId: info.messageId };
   } catch (err: any) {
-    console.error(`[Gmail Error] Failed to send email to ${options.to}:`, err.message);
-    return { success: false, error: err.message };
+    const isTimeout = err.code === 'ETIMEDOUT' || err.message?.includes('timeout');
+    const errorMsg = isTimeout
+      ? 'Render free tier blocks outbound SMTP ports 465/587. To send emails on Render, set RESEND_API_KEY over HTTPS port 443 or upgrade to a paid Render plan.'
+      : err.message;
+    console.error(`[Gmail Error] Failed to send email to ${options.to}:`, errorMsg);
+    return { success: false, error: errorMsg };
   }
 };
 

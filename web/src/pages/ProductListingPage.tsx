@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, SlidersHorizontal, Star, ShoppingBag, Check, ShieldCheck, MapPin } from 'lucide-react';
+import { Search, SlidersHorizontal, Star, ShoppingBag, Check, ShieldCheck, MapPin, Heart } from 'lucide-react';
 import { useCart } from '../context/CartContext.js';
+import { useWishlist } from '../context/WishlistContext.js';
 import { apiFetch } from '../services/api.js';
 import { ETHIOPIAN_SAMPLE_PRODUCTS, ProductItem } from '../data/sampleProducts.js';
 
@@ -16,6 +17,7 @@ const CATEGORIES = [
 
 export const ProductListingPage: React.FC = () => {
   const { addItem } = useCart();
+  const { isWishlisted, toggleWishlist } = useWishlist();
   const [products, setProducts] = useState<ProductItem[]>(ETHIOPIAN_SAMPLE_PRODUCTS);
   const [selectedCategory, setSelectedCategory] = useState('All Categories');
   const [searchQuery, setSearchQuery] = useState('');
@@ -176,6 +178,28 @@ export const ProductListingPage: React.FC = () => {
                     {p.badge}
                   </span>
                 )}
+                <button
+                  type="button"
+                  onClick={() =>
+                    toggleWishlist({
+                      _id: p._id,
+                      name: p.name,
+                      price: p.price,
+                      images: p.images,
+                      stock: p.stock,
+                    })
+                  }
+                  className="absolute top-3 right-3 bg-white/90 backdrop-blur p-2 rounded-full shadow-sm hover:scale-110 transition z-10"
+                  title={isWishlisted(p._id) ? 'Remove from Wishlist' : 'Add to Wishlist'}
+                >
+                  <Heart
+                    className={`w-4 h-4 transition ${
+                      isWishlisted(p._id)
+                        ? 'fill-rose-500 text-rose-500'
+                        : 'text-slate-400 hover:text-rose-500'
+                    }`}
+                  />
+                </button>
                 <span className="absolute bottom-3 right-3 px-2.5 py-1 text-xs font-semibold bg-white/95 backdrop-blur-md rounded-lg text-slate-800 shadow-sm">
                   {p.category}
                 </span>

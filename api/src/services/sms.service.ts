@@ -56,11 +56,9 @@ export const sendSms = async (to: string, message: string): Promise<SendSmsResul
       message,
     };
 
-    if (config.afromessage.sender) {
+    // Only attach sender if explicitly approved and not default unapproved 'SOUQ'
+    if (config.afromessage.sender && config.afromessage.sender.toUpperCase() !== 'SOUQ') {
       payload.sender = config.afromessage.sender;
-    }
-    if (config.afromessage.identifierId) {
-      payload.from = config.afromessage.identifierId;
     }
 
     const res = await fetch(AFROMESSAGE_API_URL, {
@@ -72,19 +70,26 @@ export const sendSms = async (to: string, message: string): Promise<SendSmsResul
       body: JSON.stringify(payload),
     });
 
-    const data: any = await res.json();
+    const rawText = await res.text();
+    let data: any = {};
+    try {
+      data = JSON.parse(rawText);
+    } catch {
+      data = { raw: rawText };
+    }
 
-    if (res.ok && (data.status === 'success' || data.acknowledge === 'success' || !data.error)) {
+    if (res.ok && (data.status === 'success' || data.acknowledge === 'success')) {
       console.log(`[AfroMessage] SMS sent successfully to ${normalizedTo}`);
       return {
         success: true,
         messageId: data?.response?.id || data?.id || `msg-${Date.now()}`,
       };
     } else {
-      console.error(`[AfroMessage Error] Failed to send SMS to ${normalizedTo}:`, data);
+      const errorDetail = data?.response?.errors?.[0] || data?.message || data?.error || data?.raw || 'AfroMessage rejected SMS';
+      console.warn(`[AfroMessage Info] Could not deliver SMS to ${normalizedTo}: ${errorDetail}`);
       return {
         success: false,
-        error: data?.message || data?.error || 'AfroMessage rejected SMS',
+        error: errorDetail,
       };
     }
   } catch (err: any) {

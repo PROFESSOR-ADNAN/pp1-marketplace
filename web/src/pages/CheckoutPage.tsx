@@ -1,11 +1,17 @@
 import React, { useState } from 'react';
 import { useCart } from '../context/CartContext.js';
 import { apiFetch } from '../services/api.js';
+import { Tag, Check, Sparkles } from 'lucide-react';
 
 export const CheckoutPage: React.FC = () => {
   const { total } = useCart();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Promo code state
+  const [promoInput, setPromoInput] = useState('');
+  const [appliedPromo, setAppliedPromo] = useState<{ code: string; discountPercent: number; discountFixed: number } | null>(null);
+  const [promoError, setPromoError] = useState('');
 
   const [form, setForm] = useState({
     region: 'Addis Ababa',
@@ -15,6 +21,31 @@ export const CheckoutPage: React.FC = () => {
     landmark: 'Near Edna Mall / Rwanda Embassy',
     phone: '+251911223344',
   });
+
+  const handleApplyPromo = (e: React.FormEvent) => {
+    e.preventDefault();
+    setPromoError('');
+    const code = promoInput.trim().toUpperCase();
+    if (!code) return;
+
+    if (code === 'SOUQ10') {
+      setAppliedPromo({ code, discountPercent: 10, discountFixed: 0 });
+    } else if (code === 'ENKUTATASH') {
+      setAppliedPromo({ code, discountPercent: 15, discountFixed: 0 });
+    } else if (code === 'ADDIS2026') {
+      setAppliedPromo({ code, discountPercent: 0, discountFixed: 5000 }); // 50 ETB in santim
+    } else {
+      setPromoError('Invalid promo code. Try "SOUQ10" or "ENKUTATASH"');
+    }
+  };
+
+  const discountAmount = appliedPromo
+    ? appliedPromo.discountPercent > 0
+      ? Math.round((total * appliedPromo.discountPercent) / 100)
+      : Math.min(total, appliedPromo.discountFixed)
+    : 0;
+
+  const finalTotal = Math.max(0, total - discountAmount);
 
   const handleCheckout = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -126,13 +157,70 @@ export const CheckoutPage: React.FC = () => {
 
         <div className="bg-white p-6 rounded-xl border border-slate-200 h-fit space-y-6 shadow-sm">
           <h3 className="font-bold text-lg text-slate-900 border-b pb-2">Payment Details</h3>
+          
           <div className="space-y-3">
             <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-800 text-xs">
               <strong>Secured by Chapa:</strong> Telebirr, CBE Birr, Awash Birr, and Visa/Mastercard.
             </div>
-            <div className="flex justify-between text-sm">
-              <span>Order Amount</span>
-              <span className="font-extrabold text-emerald-700">ETB {(total / 100).toFixed(2)}</span>
+
+            {/* Promo Code Input */}
+            <div className="pt-2">
+              <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">
+                Discount Coupon / Promo Code
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={promoInput}
+                  onChange={(e) => setPromoInput(e.target.value)}
+                  placeholder="e.g. SOUQ10 or ENKUTATASH"
+                  className="flex-1 border rounded-lg p-2 text-xs uppercase font-mono"
+                />
+                <button
+                  type="button"
+                  onClick={handleApplyPromo}
+                  className="bg-slate-800 hover:bg-slate-700 text-white font-bold px-3 py-2 rounded-lg text-xs transition"
+                >
+                  Apply
+                </button>
+              </div>
+              {promoError && (
+                <p className="text-[11px] text-rose-600 mt-1">{promoError}</p>
+              )}
+              {appliedPromo && (
+                <div className="mt-2 flex items-center justify-between bg-emerald-50 border border-emerald-200 p-2 rounded-lg text-xs text-emerald-800 font-bold">
+                  <span className="flex items-center gap-1">
+                    <Tag className="w-3.5 h-3.5" /> Promo "{appliedPromo.code}" Applied!
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAppliedPromo(null);
+                      setPromoInput('');
+                    }}
+                    className="text-slate-400 hover:text-slate-600 text-xs font-normal"
+                  >
+                    Remove
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div className="border-t border-slate-100 pt-3 space-y-2 text-sm">
+              <div className="flex justify-between text-slate-600">
+                <span>Subtotal</span>
+                <span>ETB {(total / 100).toFixed(2)}</span>
+              </div>
+              {discountAmount > 0 && (
+                <div className="flex justify-between text-emerald-600 font-bold">
+                  <span>Promo Discount</span>
+                  <span>-ETB {(discountAmount / 100).toFixed(2)}</span>
+                </div>
+              )}
+              <div className="flex justify-between text-base font-extrabold text-slate-900 border-t border-slate-100 pt-2">
+                <span>Total Due</span>
+                <span className="text-emerald-700">ETB {(finalTotal / 100).toFixed(2)}</span>
+              </div>
             </div>
           </div>
 
@@ -141,7 +229,7 @@ export const CheckoutPage: React.FC = () => {
             disabled={loading}
             className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-400 text-white font-bold py-3.5 rounded-xl shadow transition"
           >
-            {loading ? 'Reserving Inventory...' : 'Pay with Chapa (ETB)'}
+            {loading ? 'Reserving Inventory...' : `Pay ETB ${(finalTotal / 100).toFixed(2)} with Chapa`}
           </button>
         </div>
       </form>

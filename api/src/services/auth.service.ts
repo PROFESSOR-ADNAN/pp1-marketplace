@@ -174,3 +174,30 @@ export const deleteUserAccount = async (userId: string): Promise<void> => {
     RefreshToken.deleteMany({ user: userId }),
   ]);
 };
+
+export const demoLogin = async (requestedRole?: string): Promise<{ user: IUser; tokens: AuthTokens }> => {
+  const role = requestedRole === ROLES.ADMIN ? ROLES.ADMIN : requestedRole === ROLES.SELLER ? ROLES.SELLER : ROLES.BUYER;
+  
+  const emailMap: Record<string, { email: string; name: string }> = {
+    [ROLES.BUYER]: { email: 'demo.buyer@souq.test', name: 'Demo Buyer (Addis)' },
+    [ROLES.SELLER]: { email: 'demo.seller@souq.test', name: 'Bole Artisan Crafts' },
+    [ROLES.ADMIN]: { email: 'admin@souq.test', name: 'SOUQ Platform Admin' },
+  };
+
+  const target = emailMap[role] || emailMap[ROLES.BUYER];
+  let user = await User.findOne({ email: target.email });
+  if (!user) {
+    user = await User.create({
+      name: target.name,
+      email: target.email,
+      password: 'DemoPassword123!',
+      role,
+    });
+  } else if (user.role !== role) {
+    user.role = role;
+    await user.save();
+  }
+
+  const tokens = await issueTokenPair(user);
+  return { user, tokens };
+};

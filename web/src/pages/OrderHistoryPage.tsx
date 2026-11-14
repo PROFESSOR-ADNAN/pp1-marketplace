@@ -1,11 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Package, Clock, CheckCircle2, Truck, ArrowRight, ShieldAlert } from 'lucide-react';
+import { Package, Clock, CheckCircle2, Truck, ArrowRight, ShieldAlert, FileText, ChevronDown, ChevronUp } from 'lucide-react';
 import { apiFetch } from '../services/api.js';
+import { DeliveryTracker } from '../components/orders/DeliveryTracker.js';
+import { TaxInvoiceModal } from '../components/orders/TaxInvoiceModal.js';
 
 export const OrderHistoryPage: React.FC = () => {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedInvoiceOrder, setSelectedInvoiceOrder] = useState<any | null>(null);
+  const [expandedTracking, setExpandedTracking] = useState<Record<string, boolean>>({});
+
+  const toggleTracking = (id: string) => {
+    setExpandedTracking((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
 
   useEffect(() => {
     apiFetch('/orders')
@@ -123,20 +131,55 @@ export const OrderHistoryPage: React.FC = () => {
               ))}
             </div>
 
-            {/* Delivery landmark note */}
-            {order.deliveryAddress && (
-              <div className="pt-3 border-t border-slate-100 text-xs text-slate-500 flex flex-col sm:flex-row justify-between gap-2">
-                <div>
-                  <strong>Delivery Destination:</strong> {order.deliveryAddress.city}, {order.deliveryAddress.subCity} ({order.deliveryAddress.landmark})
+            {/* Delivery landmark note & Action buttons */}
+            <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+              {order.deliveryAddress ? (
+                <div className="text-xs text-slate-500">
+                  <strong>Delivery to:</strong> {order.deliveryAddress.city}, {order.deliveryAddress.subCity} ({order.deliveryAddress.landmark})
                 </div>
-                <div>
-                  <strong>Driver Phone:</strong> {order.deliveryAddress.phone}
-                </div>
+              ) : <div />}
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => toggleTracking(order._id)}
+                  className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 transition text-slate-700"
+                >
+                  <Truck className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Tracking Details</span>
+                  {expandedTracking[order._id] ? (
+                    <ChevronUp className="w-3.5 h-3.5" />
+                  ) : (
+                    <ChevronDown className="w-3.5 h-3.5" />
+                  )}
+                </button>
+
+                <button
+                  onClick={() => setSelectedInvoiceOrder(order)}
+                  className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white transition shadow-sm"
+                >
+                  <FileText className="w-3.5 h-3.5 text-emerald-400" /> Tax Invoice
+                </button>
+              </div>
+            </div>
+
+            {/* Expandable Live Tracker */}
+            {expandedTracking[order._id] && (
+              <div className="pt-2">
+                <DeliveryTracker
+                  status={order.status}
+                  driverPhone={order.deliveryAddress?.phone}
+                />
               </div>
             )}
           </div>
         ))}
       </div>
+
+      <TaxInvoiceModal
+        order={selectedInvoiceOrder}
+        isOpen={Boolean(selectedInvoiceOrder)}
+        onClose={() => setSelectedInvoiceOrder(null)}
+      />
     </div>
   );
 };

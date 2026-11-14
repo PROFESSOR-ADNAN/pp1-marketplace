@@ -13,6 +13,7 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   login: (email: string, pass: string) => Promise<void>;
+  demoLogin: (role: 'buyer' | 'seller' | 'admin') => Promise<void>;
   register: (name: string, email: string, pass: string, role?: string) => Promise<void>;
   logout: () => void;
   isLoading: boolean;
@@ -87,6 +88,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const demoLogin = async (role: 'buyer' | 'seller' | 'admin') => {
+    const data = await apiFetch('/auth/demo-login', {
+      method: 'POST',
+      body: JSON.stringify({ role }),
+    });
+
+    const accessToken = data.accessToken || data.token;
+    const userObj: User = data.user;
+
+    if (accessToken) {
+      localStorage.setItem('souq_token', accessToken);
+      setToken(accessToken);
+    }
+    if (userObj) {
+      localStorage.setItem('souq_user', JSON.stringify(userObj));
+      setUser(userObj);
+    }
+  };
+
   const register = async (name: string, email: string, pass: string, role: string = 'buyer') => {
     const data = await apiFetch('/auth/register', {
       method: 'POST',
@@ -120,7 +140,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, register, logout, isLoading }}>
+    <AuthContext.Provider value={{ user, token, login, demoLogin, register, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

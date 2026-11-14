@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useLocation, Link } from 'react-router-dom';
-import { CheckCircle2, XCircle, Clock, ArrowRight, RefreshCw, ShoppingCart, ShoppingBag, MapPin } from 'lucide-react';
+import { CheckCircle2, XCircle, Clock, ArrowRight, RefreshCw, ShoppingCart, ShoppingBag, MapPin, FileText } from 'lucide-react';
 import { apiFetch } from '../services/api.js';
 import { useCart } from '../context/CartContext.js';
+import { DeliveryTracker } from '../components/orders/DeliveryTracker.js';
+import { TaxInvoiceModal } from '../components/orders/TaxInvoiceModal.js';
 
 export const OrderConfirmationPage: React.FC = () => {
   const [params] = useSearchParams();
   const location = useLocation();
   const { refreshCart } = useCart();
+  const [showInvoice, setShowInvoice] = useState(false);
 
   // Extract reference from search params, hash, or path
   let detectedTxRef = params.get('tx_ref') 
@@ -165,20 +168,39 @@ export const OrderConfirmationPage: React.FC = () => {
             </div>
           )}
 
+          <div className="text-left pt-2">
+            <DeliveryTracker
+              status={orderData?.status || 'PAID'}
+              driverPhone={orderData?.deliveryAddress?.phone}
+            />
+          </div>
+
           <div className="flex flex-col sm:flex-row justify-center gap-3 pt-2">
+            <button
+              onClick={() => setShowInvoice(true)}
+              className="inline-flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-bold px-5 py-3 rounded-xl shadow transition text-sm"
+            >
+              <FileText className="w-4 h-4 text-emerald-400" /> View VAT Tax Invoice
+            </button>
             <Link
               to="/orders"
-              className="inline-flex items-center justify-center gap-2 bg-emerald-600 text-white font-bold px-6 py-3 rounded-xl shadow hover:bg-emerald-700 transition"
+              className="inline-flex items-center justify-center gap-2 bg-emerald-600 text-white font-bold px-5 py-3 rounded-xl shadow hover:bg-emerald-700 transition text-sm"
             >
               Track Your Order <ArrowRight className="w-4 h-4" />
             </Link>
             <Link
               to="/products"
-              className="inline-flex items-center justify-center gap-2 bg-slate-100 text-slate-700 font-semibold px-6 py-3 rounded-xl hover:bg-slate-200 transition"
+              className="inline-flex items-center justify-center gap-2 bg-slate-100 text-slate-700 font-semibold px-5 py-3 rounded-xl hover:bg-slate-200 transition text-sm"
             >
-              <ShoppingBag className="w-4 h-4" /> Continue Shopping
+              <ShoppingBag className="w-4 h-4" /> Shop More
             </Link>
           </div>
+
+          <TaxInvoiceModal
+            order={orderData}
+            isOpen={showInvoice}
+            onClose={() => setShowInvoice(false)}
+          />
         </div>
       ) : status === 'failed' ? (
         <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm space-y-6">

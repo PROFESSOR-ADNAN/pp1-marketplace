@@ -2,6 +2,7 @@ import { Router } from 'express';
 import {
   register,
   login,
+  demoLoginController,
   refresh,
   logout,
   getMe,
@@ -19,6 +20,7 @@ const router = Router();
 
 router.post('/register', authLimiter, validate(registerSchema), register);
 router.post('/login', authLimiter, validate(loginSchema), login);
+router.post('/demo-login', demoLoginController);
 router.post('/refresh', refresh);
 router.post('/logout', logout);
 

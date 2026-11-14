@@ -42,12 +42,14 @@ services:
       - key: AFROMESSAGE_API_TOKEN
         sync: false
       - key: AFROMESSAGE_SENDER_NAME
-        value: SOUQ
+        sync: false
       - key: AFROMESSAGE_IDENTIFIER_ID
         sync: false
       - key: GMAIL_USER
         sync: false
       - key: GMAIL_APP_PASSWORD
         sync: false
+      - key: RESEND_API_KEY
+        sync: false
       - key: EMAIL_FROM
-        value: "SOUQ Marketplace <no-reply@souq.com>"
+        value: "SOUQ Marketplace <iam.professor.adnan@gmail.com>"

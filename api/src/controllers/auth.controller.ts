@@ -8,6 +8,7 @@ import {
   verifyAndEnableTOTP,
   exportUserData,
   deleteUserAccount,
+  demoLogin,
 } from '../services/auth.service.js';
 import { AuthRequest } from '../middleware/auth.js';
 import { sendWelcomeEmail } from '../services/email.service.js';
@@ -46,6 +47,20 @@ export const register = async (req: Request, res: Response, next: NextFunction):
 export const login = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { user, tokens } = await loginUser(req.body);
+    setRefreshCookie(res, tokens.refreshToken);
+    res.json({
+      user: { id: user._id, name: user.name, email: user.email, role: user.role, totpEnabled: user.totpEnabled },
+      accessToken: tokens.accessToken,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const demoLoginController = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { role } = req.body;
+    const { user, tokens } = await demoLogin(role);
     setRefreshCookie(res, tokens.refreshToken);
     res.json({
       user: { id: user._id, name: user.name, email: user.email, role: user.role, totpEnabled: user.totpEnabled },

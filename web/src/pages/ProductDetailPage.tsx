@@ -1,17 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Star, ShieldCheck, Truck, RefreshCw, ShoppingBag, Check, ArrowLeft, MapPin } from 'lucide-react';
+import { Star, ShieldCheck, Truck, RefreshCw, ShoppingBag, Check, ArrowLeft, MapPin, Heart, AlertTriangle } from 'lucide-react';
 import { useCart } from '../context/CartContext.js';
+import { useWishlist } from '../context/WishlistContext.js';
 import { apiFetch } from '../services/api.js';
 import { ETHIOPIAN_SAMPLE_PRODUCTS, ProductItem } from '../data/sampleProducts.js';
 
 export const ProductDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { addItem } = useCart();
+  const { isWishlisted, toggleWishlist } = useWishlist();
   const [product, setProduct] = useState<ProductItem | null>(null);
   const [activeImage, setActiveImage] = useState<string>('');
   const [quantity, setQuantity] = useState(1);
   const [isAdded, setIsAdded] = useState(false);
+  const [selectedVariant, setSelectedVariant] = useState<string>('Standard');
 
   useEffect(() => {
     // Check sample products first
@@ -140,6 +143,37 @@ export const ProductDetailPage: React.FC = () => {
               </div>
             </div>
 
+            {/* Low stock warning */}
+            {product.stock > 0 && product.stock <= 5 && (
+              <div className="flex items-center gap-2 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs font-bold text-amber-800">
+                <AlertTriangle className="w-4 h-4 text-amber-600 animate-bounce" />
+                <span>Hurry! Only {product.stock} items left in stock across Addis Ababa merchants.</span>
+              </div>
+            )}
+
+            {/* Variant Selector */}
+            <div className="space-y-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                Select Option / Variant:
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {['Standard', 'Premium Roast', 'Custom Size'].map((variant) => (
+                  <button
+                    key={variant}
+                    type="button"
+                    onClick={() => setSelectedVariant(variant)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition ${
+                      selectedVariant === variant
+                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+                        : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300'
+                    }`}
+                  >
+                    {variant}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="space-y-2">
               <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">Description</h4>
               <p className="text-slate-700 text-sm leading-relaxed whitespace-pre-line">
@@ -206,6 +240,27 @@ export const ProductDetailPage: React.FC = () => {
                     <ShoppingBag className="w-5 h-5" /> Add to Cart — ETB {((product.price * quantity) / 100).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                   </>
                 )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() =>
+                  toggleWishlist({
+                    _id: product._id,
+                    name: product.name,
+                    price: product.price,
+                    images: product.images,
+                    stock: product.stock,
+                  })
+                }
+                className={`p-3.5 rounded-xl border transition shadow-sm ${
+                  isWishlisted(product._id)
+                    ? 'bg-rose-50 border-rose-200 text-rose-600'
+                    : 'bg-slate-50 border-slate-200 text-slate-500 hover:text-rose-600 hover:bg-rose-50/50'
+                }`}
+                title={isWishlisted(product._id) ? 'Remove from Wishlist' : 'Save to Wishlist'}
+              >
+                <Heart className={`w-5 h-5 ${isWishlisted(product._id) ? 'fill-current' : ''}`} />
               </button>
             </div>
 

@@ -43,6 +43,7 @@ export const config = {
     user: process.env.GMAIL_USER || process.env.SMTP_USER || '',
     pass: process.env.GMAIL_APP_PASSWORD || process.env.SMTP_PASS || '',
     from: process.env.EMAIL_FROM || process.env.GMAIL_USER || 'SOUQ Marketplace <no-reply@souq.com>',
+    resendApiKey: process.env.RESEND_API_KEY || '',
   },
   smtp: {
     host: process.env.SMTP_HOST || 'localhost',
